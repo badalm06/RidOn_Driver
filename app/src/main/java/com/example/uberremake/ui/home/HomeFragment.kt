@@ -1,9 +1,14 @@
 package com.example.uberremake.ui.home
 
 import android.Manifest
+import android.app.AlertDialog
+import android.content.Context
+import android.content.Intent
 import android.content.res.Resources
 import android.location.Address
 import android.location.Geocoder
+import android.location.LocationManager
+import android.media.audiofx.BassBoost.Settings
 import android.os.Build
 import android.os.Bundle
 import android.os.Looper
@@ -90,6 +95,27 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
     }
 
+    private fun isLocationEnabled(): Boolean {
+        val locationManager = requireContext().getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
+                locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+    }
+
+    private fun showLocationEnableDialog() {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Location Required")
+            .setMessage("Please enable location services to use this app.")
+            .setCancelable(false)
+            .setPositiveButton("Enable") { _, _ ->
+                startActivity(Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+            }
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
+    }
+
+
 
     @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     override fun onCreateView(
@@ -102,7 +128,11 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        init()
+        if (!isLocationEnabled()) {
+            showLocationEnableDialog()
+        } else {
+            init() // Your initialization logic (location updates, map, etc.)
+        }
 
         mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
@@ -119,10 +149,10 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
         locationRequest = LocationRequest.Builder(
             Priority.PRIORITY_HIGH_ACCURACY,
-            5000L // interval
+            10000L // interval
         )
-            .setMinUpdateIntervalMillis(3000L) // fastest interval
-            .setMinUpdateDistanceMeters(10f) // smallest displacement
+            .setMinUpdateIntervalMillis(15000L) // fastest interval
+            .setMinUpdateDistanceMeters(50f) // smallest displacement
             .build()
 
         locationCallback = object : LocationCallback() {
@@ -166,9 +196,10 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                         ) { key: String?, error: DatabaseError? ->
                             if (error != null) {
                                 Snackbar.make(mapFragment.requireView(), error.message, Snackbar.LENGTH_LONG).show()
-                            } else {
-                                Snackbar.make(mapFragment.requireView(), "You're Online!", Snackbar.LENGTH_SHORT).show()
                             }
+//                            else {
+//                                Snackbar.make(mapFragment.requireView(), "You're Online!", Snackbar.LENGTH_SHORT).show()
+//                            }
                         }
 
                     } catch (e: IOException) {
@@ -246,19 +277,22 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         }catch (e: Resources.NotFoundException) {
             Log.e("EDMT_ERROR", e.message.toString())
         }
+        Snackbar.make(mapFragment.requireView(), "You're Online!", Snackbar.LENGTH_SHORT).show()
 
 
-        // Add a marker and move the camera
-        val customLocation = LatLng(27.4270, 77.6969) // Latitude, Longitude of Mathura
-        mMap.addMarker(MarkerOptions().position(customLocation).title("Marker in Mathura"))
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(customLocation, 15f)) // 15f = Zoom level
+//        // Add a marker and move the camera
+//        val customLocation = LatLng(27.4270, 77.6969) // Latitude, Longitude of Mathura
+//        mMap.addMarker(MarkerOptions().position(customLocation).title("Marker in Mathura"))
+//        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(customLocation, 15f)) // 15f = Zoom level
 
 
     }
 
     override fun onResume() {
         super.onResume()
-        registerOnlineSystem()
+        if (::onlineRef.isInitialized) {
+            registerOnlineSystem()
+        }
     }
 
     private fun registerOnlineSystem() {
