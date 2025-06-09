@@ -63,6 +63,10 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    implementation("com.google.firebase:firebase-appcheck")
+    implementation("com.google.firebase:firebase-appcheck-playintegrity")
+    implementation ("com.google.firebase:firebase-analytics:21.2.0")
+
 
     implementation ("io.reactivex.rxjava3:rxandroid:3.0.2")
     implementation ("io.reactivex.rxjava3:rxjava:3.1.8")
@@ -90,8 +94,16 @@ dependencies {
 
     implementation ("de.hdodenhof:circleimageview:3.1.0")
 
+    // Retrofit
+  //  implementation ("com.squareup.retrofit2:adapter-rxjava2:2.6.1")
+    implementation ("com.squareup.retrofit2:converter-scalars:2.6.1")
+    implementation ("com.squareup.retrofit2:converter-gson:2.6.1")
+    implementation ("com.squareup.retrofit2:adapter-rxjava3:2.9.0")
 
+// EventBus
+    implementation ("org.greenrobot:eventbus:3.2.0")
 
-
+// Circular Progress Bar
+    implementation ("androidx.compose.material:material:1.5.0")
 
 }

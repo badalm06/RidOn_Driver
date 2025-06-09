@@ -1,6 +1,8 @@
 package com.example.uberremake.login
 
 import android.content.Intent
+import android.os.Handler
+import android.os.Looper
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -13,6 +15,7 @@ import com.example.uberremake.R
 import com.example.uberremake.databinding.ActivityLogInBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.messaging.FirebaseMessaging
 
 class logInActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLogInBinding
@@ -62,9 +65,15 @@ class logInActivity : AppCompatActivity() {
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
                             Toast.makeText(this, "Login Successfully", Toast.LENGTH_SHORT).show()
+                            Handler(Looper.getMainLooper()).postDelayed({
+                                FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
+                                    User.updateToken(this, token)
+                                }
+                            }, 3000) // 1 second delay
                             startActivity(Intent(this, EditProfileActivity::class.java))
                             finish()
-                        } else {
+                        }
+                        else {
                             Toast.makeText(
                                 this,
                                 "Login Failed: ${task.exception?.message}",

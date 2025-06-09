@@ -30,6 +30,8 @@ import com.google.firebase.auth.FirebaseAuthMissingActivityForRecaptchaException
 import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.Runnable
 import java.util.concurrent.TimeUnit
 import kotlin.toString
@@ -175,11 +177,20 @@ class OTPActivity : AppCompatActivity() {
         auth.signInWithCredential(credential)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
-                    // Sign in success, update UI with the signed-in user's information
                     progressBar.visibility = View.VISIBLE
                     Toast.makeText(this, "Authenticate Successfully", Toast.LENGTH_SHORT).show()
+                    FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
+                        val user = auth.currentUser
+                        user?.let {
+                            FirebaseDatabase.getInstance().getReference("Token")
+                                .child(it.uid)
+                                .child("token")
+                                .setValue(token)
+                        }
+                    }
                     sendToMain()
-                } else {
+                }
+                else {
                     // Sign in failed, display a message and update the UI
                     Log.d("TAG", "sighIWithPhoneAuthCredential: ${task.exception.toString()}")
                     if (task.exception is FirebaseAuthInvalidCredentialsException) {

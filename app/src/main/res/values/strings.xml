@@ -14,4 +14,6 @@
     <string name="title_activity_maps">MapsActivity</string>
     <string name="menu_slideshow">Sign Out\n</string>
     <string name="menu_edit_profile">Edit Profile\n</string>
+    <string name="maps_directions_api_key" translatable="false">AIzaSyAlOAmMTTK2Gg8veYFcDhj7H-EyXJjQhfo</string>
+    <string name="decline">Decline\n</string>
 </resources>

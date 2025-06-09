@@ -1,5 +1,5 @@
 package com.example.uberremake.Model
 
-class TokenModel {
+class TokenModel (
     var token: String=""
-}
+    )

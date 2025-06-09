@@ -58,14 +58,66 @@ class EditProfileActivity : AppCompatActivity() {
         loadUserProfile()
 
         binding.btnBack.setOnClickListener {
-            startActivity(Intent(this, DriverHomeActivity::class.java))
-            finish()
+            val name = binding.etName.text.toString().trim()
+            val phone = binding.etPhone.text.toString().trim()
+            val email = binding.etEmail.text.toString().trim()
+
+            var isValid = true
+
+            if (name.isEmpty()) {
+                binding.etName.error = "Name is required"
+                isValid = false
+            }
+            if (phone.isEmpty()) {
+                binding.etPhone.error = "Phone number is required"
+                isValid = false
+            }
+            if (email.isEmpty()) {
+                binding.etEmail.error = "Email is required"
+                isValid = false
+            } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                binding.etEmail.error = "Enter a valid email"
+                isValid = false
+            }
+
+            if (isValid) {
+                // Save profile before navigating
+                saveUserProfileAndNavigateToHome()
+            }
+            // If not valid, errors will be shown and navigation will not happen
         }
 
+
         binding.driverActivityButton.setOnClickListener {
-            startActivity(Intent(this, DriverHomeActivity::class.java))
-            finish()
+            val name = binding.etName.text.toString().trim()
+            val phone = binding.etPhone.text.toString().trim()
+            val email = binding.etEmail.text.toString().trim()
+
+            var isValid = true
+
+            if (name.isEmpty()) {
+                binding.etName.error = "Name is required"
+                isValid = false
+            }
+            if (phone.isEmpty()) {
+                binding.etPhone.error = "Phone number is required"
+                isValid = false
+            }
+            if (email.isEmpty()) {
+                binding.etEmail.error = "Email is required"
+                isValid = false
+            } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                binding.etEmail.error = "Enter a valid email"
+                isValid = false
+            }
+
+            if (isValid) {
+                // All fields are filled and valid, proceed
+                saveUserProfileAndNavigateToHome()
+            }
+            // If not valid, errors will be shown and navigation will not happen
         }
+
 
         setEditable(false)
 
@@ -88,6 +140,15 @@ class EditProfileActivity : AppCompatActivity() {
             finish()
         }
     }
+
+    private fun saveUserProfileAndNavigateToHome() {
+        saveUserProfile {
+            // This code runs only after the profile is successfully saved
+            startActivity(Intent(this, DriverHomeActivity::class.java))
+            finish()
+        }
+    }
+
 
     private fun loadUserProfile() {
         user?.let { currentUser ->
@@ -124,9 +185,12 @@ class EditProfileActivity : AppCompatActivity() {
         setEditable(isEditing)
         binding.editBtn.text = if (isEditing) "Save" else "Edit"
         if (!isEditing) {
-            saveUserProfile()
+            saveUserProfile {
+                Toast.makeText(this, "Profile updated", Toast.LENGTH_SHORT).show()
+            }
         }
     }
+
 
     private fun setEditable(editable: Boolean) {
         binding.etName.isEnabled = editable
@@ -134,7 +198,7 @@ class EditProfileActivity : AppCompatActivity() {
         binding.etEmail.isEnabled = editable && (user?.email.isNullOrEmpty())
     }
 
-    private fun saveUserProfile() {
+    private fun saveUserProfile(onSuccess: () -> Unit) {
         val name = binding.etName.text.toString().trim()
         val phone = binding.etPhone.text.toString().trim()
         val email = binding.etEmail.text.toString().trim()
@@ -150,12 +214,12 @@ class EditProfileActivity : AppCompatActivity() {
                     val currentPhone = snapshot.getValue(String::class.java)
                     if (currentPhone != phone) {
                         // Phone changed, verify via OTP
-                        sendOtpForVerification(phone, name, email)
+                        sendOtpForVerification(phone, name, email, onSuccess)
                     } else {
                         if (selectedImageUri != null) {
-                            uploadImageAndSaveProfile(name, phone, email)
+                            uploadImageAndSaveProfile(name, phone, email, onSuccess)
                         } else {
-                            updateProfile(name, phone, email, null)
+                            updateProfile(name, phone, email, null, onSuccess)
                         }
                     }
                 }
@@ -167,9 +231,9 @@ class EditProfileActivity : AppCompatActivity() {
         }
     }
 
-    private fun uploadImageAndSaveProfile(name: String, phone: String, email: String) {
+    private fun uploadImageAndSaveProfile(name: String, phone: String, email: String, onSuccess: () -> Unit) {
         if (selectedImageUri == null) {
-            updateProfile(name, phone, email, null)
+            updateProfile(name, phone, email, null, onSuccess)
             return
         }
 
@@ -178,23 +242,24 @@ class EditProfileActivity : AppCompatActivity() {
                 storageReference.downloadUrl.addOnSuccessListener { uri ->
                     val imageUrl = uri.toString()
                     Glide.with(this).load(uri).into(profileImageView)
-                    updateProfile(name, phone, email, imageUrl)
+                    updateProfile(name, phone, email, imageUrl, onSuccess)
                 }
             }
             .addOnFailureListener {
                 Toast.makeText(this, "Image upload failed", Toast.LENGTH_SHORT).show()
-                updateProfile(name, phone, email, null)
+                updateProfile(name, phone, email, null, onSuccess)
             }
     }
 
-    private fun sendOtpForVerification(phoneNumber: String, name: String, email: String) {
+
+    private fun sendOtpForVerification(phoneNumber: String, name: String, email: String, onSuccess: () -> Unit) {
         val options = PhoneAuthOptions.newBuilder(firebaseAuth)
             .setPhoneNumber("+91$phoneNumber")
             .setTimeout(60L, TimeUnit.SECONDS)
             .setActivity(this)
             .setCallbacks(object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
                 override fun onVerificationCompleted(credential: PhoneAuthCredential) {
-                    verifyOtpAndSave(credential, name, phoneNumber, email)
+                    verifyOtpAndSave(credential, name, phoneNumber, email, onSuccess)
                 }
 
                 override fun onVerificationFailed(e: FirebaseException) {
@@ -202,18 +267,20 @@ class EditProfileActivity : AppCompatActivity() {
                 }
 
                 override fun onCodeSent(verificationId: String, token: PhoneAuthProvider.ForceResendingToken) {
-                    showOtpDialog(verificationId, name, phoneNumber, email)
+                    showOtpDialog(verificationId, name, phoneNumber, email, onSuccess)
                 }
             }).build()
 
         PhoneAuthProvider.verifyPhoneNumber(options)
     }
 
+
     private fun showOtpDialog(
         verificationId: String,
         name: String,
         phone: String,
-        email: String
+        email: String,
+        onSuccess: () -> Unit
     ) {
         val input = EditText(this)
         input.inputType = InputType.TYPE_CLASS_NUMBER
@@ -224,33 +291,81 @@ class EditProfileActivity : AppCompatActivity() {
             .setPositiveButton("Verify") { _, _ ->
                 val otp = input.text.toString()
                 val credential = PhoneAuthProvider.getCredential(verificationId, otp)
-                verifyOtpAndSave(credential, name, phone, email)
+                verifyOtpAndSave(credential, name, phone, email, onSuccess)
             }
             .setNegativeButton("Cancel", null)
             .show()
     }
 
+
     private fun verifyOtpAndSave(
         credential: PhoneAuthCredential,
         name: String,
         phone: String,
-        email: String
+        email: String,
+        onSuccess: () -> Unit
     ) {
-        firebaseAuth.signInWithCredential(credential)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    if (selectedImageUri != null) {
-                        uploadImageAndSaveProfile(name, phone, email)
+        val currentUser = firebaseAuth.currentUser
+
+        if (currentUser == null) {
+            // Not logged in: phone login
+            firebaseAuth.signInWithCredential(credential)
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        user = firebaseAuth.currentUser
+                        if (selectedImageUri != null) {
+                            uploadImageAndSaveProfile(name, phone, email, onSuccess)
+                        } else {
+                            updateProfile(name, phone, email, null, onSuccess)
+                        }
                     } else {
-                        updateProfile(name, phone, email, null)
+                        Toast.makeText(this, "Invalid OTP", Toast.LENGTH_SHORT).show()
                     }
-                } else {
-                    Toast.makeText(this, "Invalid OTP", Toast.LENGTH_SHORT).show()
                 }
+        } else {
+            // Already logged in: check if phone is already linked
+            if (currentUser.phoneNumber == "+91$phone") {
+                // Already linked, just update profile
+                if (selectedImageUri != null) {
+                    uploadImageAndSaveProfile(name, phone, email, onSuccess)
+                } else {
+                    updateProfile(name, phone, email, null, onSuccess)
+                }
+            } else if (currentUser.providerData.any { it.providerId == "phone" }) {
+                // User already has a phone linked, so update it
+                currentUser.updatePhoneNumber(credential)
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            if (selectedImageUri != null) {
+                                uploadImageAndSaveProfile(name, phone, email, onSuccess)
+                            } else {
+                                updateProfile(name, phone, email, null, onSuccess)
+                            }
+                        } else {
+                            Toast.makeText(this, "Could not update phone: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+            } else {
+                // No phone linked yet, link it
+                currentUser.linkWithCredential(credential)
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            if (selectedImageUri != null) {
+                                uploadImageAndSaveProfile(name, phone, email, onSuccess)
+                            } else {
+                                updateProfile(name, phone, email, null, onSuccess)
+                            }
+                        } else {
+                            Toast.makeText(this, "Invalid OTP or phone already linked", Toast.LENGTH_SHORT).show()
+                        }
+                    }
             }
+        }
     }
 
-    private fun updateProfile(name: String, phone: String, email: String, imageUrl: String?) {
+
+
+    private fun updateProfile(name: String, phone: String, email: String, imageUrl: String?, onSuccess: () -> Unit) {
         val userData = mutableMapOf<String, Any>(
             "name" to name,
             "phone" to phone,
@@ -264,7 +379,6 @@ class EditProfileActivity : AppCompatActivity() {
             database.child(currentUser.uid).updateChildren(userData)
                 .addOnSuccessListener {
                     Toast.makeText(this, "Profile updated", Toast.LENGTH_SHORT).show()
-
                     Common.currentUser = User().apply {
                         this.name = name
                         this.number = phone
@@ -273,12 +387,14 @@ class EditProfileActivity : AppCompatActivity() {
                             this.profileImageUrl = imageUrl
                         }
                     }
+                    onSuccess() // Navigation or next step only after successful save
                 }
                 .addOnFailureListener {
                     Toast.makeText(this, "Failed to update profile", Toast.LENGTH_SHORT).show()
                 }
         }
     }
+
 
     private fun selectProfileImage() {
         val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)

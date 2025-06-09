@@ -12,12 +12,22 @@ import com.example.uberremake.login.logInActivity
 import com.google.android.gms.auth.api.signin.GoogleSignIn.getClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.Firebase
+import com.google.firebase.FirebaseApp
+import com.google.firebase.appcheck.FirebaseAppCheck
+import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory
 import com.google.firebase.auth.auth
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+//        // Initialize Firebase (optional, but safe)
+//        FirebaseApp.initializeApp(this)
+//
+//        // Install App Check provider before any Firebase usage
+//        FirebaseAppCheck.getInstance().installAppCheckProviderFactory(
+//            PlayIntegrityAppCheckProviderFactory.getInstance()
+//        )
         enableEdgeToEdge()
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)

@@ -10,6 +10,8 @@ import androidx.core.view.WindowInsetsCompat
 import com.example.uberremake.R
 import com.example.uberremake.databinding.ActivitySignUpBinding
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlin.toString
 
 class SignUpActivity : AppCompatActivity() {
@@ -52,11 +54,23 @@ class SignUpActivity : AppCompatActivity() {
             else {
                 auth.createUserWithEmailAndPassword(email, password)
                     .addOnCompleteListener(this) { task ->
-                        if(task.isSuccessful) {
+                        if (task.isSuccessful) {
+                            val user = auth.currentUser
+                            val database = FirebaseDatabase.getInstance().getReference("users")
+                            val userData = mapOf(
+                                "email" to email
+                            )
+                            user?.let {
+                                database.child(it.uid).setValue(userData)
+                            }
                             Toast.makeText(this, "Successfully Registered", Toast.LENGTH_SHORT).show()
-                            startActivity(Intent(this,logInActivity::class.java))
+                            FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
+                                User.updateToken(this, token)
+                            }
+                            startActivity(Intent(this, EditProfileActivity::class.java))
                             finish()
                         }
+
                         else {
                             Toast.makeText(this, "Registration failed : ${task.exception?.message}", Toast.LENGTH_SHORT).show()
                         }
