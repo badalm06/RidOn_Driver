@@ -25,7 +25,7 @@ class MyFirebaseMessagingService: FirebaseMessagingService() {
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
 
-        // Optional: Show a Toast for debugging (remove in production)
+       //  Optional: Show a Toast for debugging (remove in production)
 //        android.os.Handler(android.os.Looper.getMainLooper()).post {
 //            Toast.makeText(this, "FCM RECEIVED!", Toast.LENGTH_LONG).show()
 //        }

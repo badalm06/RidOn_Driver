@@ -112,8 +112,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
 
 
-
-
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
     private lateinit var mMap: GoogleMap
@@ -177,18 +175,9 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     override fun onStart() {
         super.onStart()
         Log.d("EVENTBUS", "Fragment onStart called")
-        EventBus.getDefault().register(this)
+        if(!EventBus.getDefault().isRegistered(this))
+            EventBus.getDefault().register(this)
     }
-
-
-
-
-
-//    override fun onDestroyView() {
-//        EventBus.getDefault().unregister(this)
-//        super.onDestroyView()
-//    }
-
 
     override fun onDestroyView() {
         _binding = null
@@ -203,7 +192,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         super.onDestroyView()
 
     }
-
 
 
     @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
