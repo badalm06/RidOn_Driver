@@ -106,4 +106,6 @@ dependencies {
 // Circular Progress Bar
     implementation ("androidx.compose.material:material:1.5.0")
 
+    implementation ("com.google.maps.android:android-maps-utils:2.4.0")
+
 }

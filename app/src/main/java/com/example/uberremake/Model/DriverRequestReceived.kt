@@ -1,3 +1,3 @@
 package com.example.uberremake.Model
 
-class DriverRequestReceived(var key: String, var pickupLocation: String)
+class DriverRequestReceived(var tripId: String, var pickupLocation: String)

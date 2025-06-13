@@ -3,15 +3,21 @@ package com.example.uberremake.ui.home
 import android.Manifest
 import android.animation.ValueAnimator
 import android.app.AlertDialog
+import com.google.maps.android.PolyUtil
 import android.content.Context
+import android.os.Handler
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Resources
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.location.Address
 import android.location.Geocoder
+import android.location.Location
 import android.location.LocationManager
 import android.media.audiofx.BassBoost.Settings
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Looper
@@ -21,6 +27,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.LinearInterpolator
+import android.widget.Button
+import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.RelativeLayout
 import android.widget.TextView
@@ -33,6 +41,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import com.bumptech.glide.Glide
 import com.example.uberremake.R
 import com.example.uberremake.Common
 import com.example.uberremake.DriverHomeActivity
@@ -71,6 +80,8 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.MutableData
+import com.google.firebase.database.Transaction
 import com.google.firebase.database.ValueEventListener
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.PermissionToken
@@ -108,7 +119,26 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private lateinit var txt_estimate_time: TextView
     private lateinit var txt_estimate_distance: TextView
     private var pickupMarker: Marker? = null
+    private var driverMarker: Marker? = null
     private var routeAnimator: ValueAnimator? = null
+    private var routePolyline: Polyline? = null
+
+
+    // Rider Info Layout
+    private lateinit var riderInfoLayout: CardView
+    private lateinit var txtEta: TextView
+    private lateinit var txtDistance: TextView
+    private lateinit var imgRider: ImageView
+    private lateinit var txtRiderName: TextView
+    private lateinit var txtRiderRating: TextView
+    private lateinit var imgCallRider: ImageView
+    private lateinit var btnStartUber: Button
+    private lateinit var activeTripId: String
+
+
+    // Accept or Decline
+    private var isRequestHandled = false
+
 
 
 
@@ -212,8 +242,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         } else {
             initViews(root)
             init() // Your initialization logic (location updates, map, etc.)
-        }
 
+        }
         mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
@@ -226,6 +256,15 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         circularProgressBar = root.findViewById(R.id.circularProgressBar) as ProgressBar
         txt_estimate_time = root.findViewById(R.id.txt_estimate_time) as TextView
         txt_estimate_distance = root.findViewById(R.id.txt_estimate_distance) as TextView
+        riderInfoLayout = root.findViewById(R.id.rider_info_layout) as CardView
+        txtEta = root.findViewById(R.id.txt_eta) as TextView
+        txtDistance = root.findViewById(R.id.txt_distance) as TextView
+        imgRider = root.findViewById(R.id.img_rider) as ImageView
+        txtRiderName = root.findViewById(R.id.txt_rider_name) as TextView
+     //   txtRiderRating = root.findViewById(R.id.txt_rider_rating) as TextView
+        imgCallRider = root.findViewById(R.id.img_call_rider) as ImageView
+        btnStartUber = root.findViewById(R.id.btn_start_uber) as Button
+
 
     }
 
@@ -248,10 +287,14 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
+                Log.d("DriverLocation", "onLocationResult fired")
                 super.onLocationResult(locationResult)
                 val location = locationResult.lastLocation ?: return
                 val newPos = LatLng(location.latitude, location.longitude)
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newPos, 18f))
+                driverMarker?.position = newPos
+
+
 
                 val geoCoder = Geocoder(requireContext(), Locale.getDefault())
                 lifecycleScope.launch {
@@ -297,7 +340,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                         Snackbar.make(mapFragment.requireView(), "Error: ${e.message}", Snackbar.LENGTH_LONG).show()
                     }
                 }
-
 
             }
         }
@@ -365,16 +407,20 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             Log.e("EDMT_ERROR", e.message.toString())
         }
         Snackbar.make(mapFragment.requireView(), "You're Online!", Snackbar.LENGTH_SHORT).show()
+    }
 
-
-
+    fun resizeBitmap(context: Context, drawableRes: Int, width: Int, height: Int): Bitmap {
+        val imageBitmap = BitmapFactory.decodeResource(context.resources, drawableRes)
+        return Bitmap.createScaledBitmap(imageBitmap, width, height, false)
     }
 
     @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
     fun onDriverRequestReceived(event: DriverRequestReceived) {
         Log.d("EVENTBUS", "onDriverRequestReceived called with: $event")
-     //   Toast.makeText(context, "Popup Event Received!", Toast.LENGTH_SHORT).show()
+        isRequestHandled = false
+
+        //   Toast.makeText(context, "Popup Event Received!", Toast.LENGTH_SHORT).show()
 
         fusedLocationProviderClient.lastLocation
             .addOnFailureListener { e ->
@@ -485,6 +531,9 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                                 txt_estimate_time.text = duration
                                 txt_estimate_distance.text = distance
 
+                                txtEta.text = duration
+                                txtDistance.text = distance
+
                                 // Add marker at driver's current location (origin)
                                 mMap.isMyLocationEnabled = true
 
@@ -524,39 +573,41 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
                                         // When finished, hide popup
                                         if (tick == 100L) {
-                                            // Hide popup and remove marker & route
-                                            chip_decline.visibility = View.GONE
-                                            layout_accept.visibility = View.GONE
-                                            pickupMarker?.remove()
-                                            pickupMarker = null
-                                            clearRoute()
-                                            Log.d("ROUTE_DEBUG", "Removing grey polyline: $greyPolyline")
-                                            greyPolyline?.remove()
-                                            greyPolyline = null
-                                            Log.d("ROUTE_DEBUG", "Removing black polyline: $blackPolyline")
-                                            blackPolyline?.remove()
-                                            blackPolyline = null
+                                            if (!isRequestHandled) {
+                                                isRequestHandled = true
+                                                // 1. Hide popup and clean up UI
+                                                chip_decline.visibility = View.GONE
+                                                layout_accept.visibility = View.GONE
+                                                riderInfoLayout.visibility = View.VISIBLE
+                                                pickupMarker?.remove()
+                                                pickupMarker = null
+                                                clearRoute()
+                                                greyPolyline?.remove()
+                                                greyPolyline = null
+                                                blackPolyline?.remove()
+                                                blackPolyline = null
 
+                                                Log.d("RideDebug", "Auto-accepting ride: ${event.tripId}")
+                                                acceptRide(event)
+                                            }
                                         }
+
                                     }
                                 chip_decline.setOnClickListener {
-                                    chip_decline.visibility = View.GONE
-                                    layout_accept.visibility = View.GONE
-                                    timerDisposable?.dispose()
-                                    pickupMarker?.remove()
-                                    pickupMarker = null
-                                    clearRoute()
-
-                                    // REMOVE POLYLINES HERE
-                                    Log.d("ROUTE_DEBUG", "Removing grey polyline: $greyPolyline")
-                                    greyPolyline?.remove()
-                                    greyPolyline = null
-                                    Log.d("ROUTE_DEBUG", "Removing black polyline: $blackPolyline")
-                                    blackPolyline?.remove()
-                                    blackPolyline = null
-
-
-                                    Toast.makeText(context, "Request Declined", Toast.LENGTH_SHORT).show()
+                                    if (!isRequestHandled) {
+                                        isRequestHandled = true
+                                        chip_decline.visibility = View.GONE
+                                        layout_accept.visibility = View.GONE
+                                        timerDisposable?.dispose()
+                                        pickupMarker?.remove()
+                                        pickupMarker = null
+                                        clearRoute()
+                                        greyPolyline?.remove()
+                                        greyPolyline = null
+                                        blackPolyline?.remove()
+                                        blackPolyline = null
+                                        declineRide(event)
+                                    }
                                 }
 
 
@@ -582,6 +633,257 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         blackPolyline = null
     }
 
+    fun updateDriverLocation(tripId: String, lat: Double, lng: Double) {
+        Log.d("DriverLocation", "Attempting to update: $tripId, $lat, $lng")
+        val tripLocationRef = FirebaseDatabase.getInstance().getReference("Trips").child(tripId).child("driverLocation")
+        val locationMap = mapOf("lat" to lat, "lng" to lng)
+        tripLocationRef.setValue(locationMap)
+            .addOnSuccessListener { Log.d("DriverLocation", "Location updated!") }
+            .addOnFailureListener { e -> Log.e("DriverLocation", "Failed to update: ${e.message}") }
+    }
+
+
+    private fun acceptRide(event: DriverRequestReceived) {
+        val tripId = event.tripId
+        val rideRef = FirebaseDatabase.getInstance().getReference("Trips").child(tripId)
+
+
+        Log.d("AcceptRide", "Attempting to accept ride with transaction")
+
+        rideRef.runTransaction(object : Transaction.Handler {
+            override fun doTransaction(currentData: MutableData): Transaction.Result {
+                val tripMap = currentData.value as? Map<*, *>
+                val status = tripMap?.get("status") as? String
+
+                Log.d("AcceptRide", "Transaction started. Current status: $status")
+
+                if (status == null || status == "requested" || status == "declined") {
+                    Log.d("AcceptRide", "Ride is eligible for acceptance (status: $status). Accepting now.")
+                    currentData.child("status").value = "accepted"
+                    currentData.child("driverId").value = FirebaseAuth.getInstance().currentUser!!.uid
+
+                    return Transaction.success(currentData)
+                } else {
+                    Log.d("AcceptRide", "Ride is NOT eligible for acceptance (status: $status). Aborting transaction.")
+                    return Transaction.abort()
+                }
+            }
+
+
+            @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
+            override fun onComplete(error: DatabaseError?, committed: Boolean, currentData: DataSnapshot?) {
+                if (error != null) {
+                    Log.e("AcceptRide", "Transaction error: ${error.message}")
+                    Toast.makeText(context, "Accept failed: ${error.message}", Toast.LENGTH_SHORT).show()
+                    return
+                }
+                if (!committed) {
+                    Log.d("AcceptRide", "Ride already accepted by another driver.")
+                    Toast.makeText(context, "Ride already accepted by another driver.", Toast.LENGTH_SHORT).show()
+                    riderInfoLayout.visibility = View.GONE
+                    return
+                }
+
+                // Transaction committed: fetch trip and rider info for UI updates
+                activeTripId = tripId
+                Log.d("AcceptRide", "activeTripId set: $activeTripId")
+                // After: activeTripId = tripId
+                startTripLocationUpdates()
+
+
+                // Immediately push current location to trip node
+                fusedLocationProviderClient.lastLocation.addOnSuccessListener { location ->
+                    if (location != null) {
+                        updateDriverLocation(activeTripId, location.latitude, location.longitude)
+                        Log.d("DriverLocation", "Manually pushed driver location after accepting ride")
+                    } else {
+                        Log.d("DriverLocation", "No last known location available to push")
+                    }
+                }
+
+                Log.d("AcceptRide", "Trip node updated successfully")
+                rideRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        Log.d("AcceptRide", "Fetched trip data from Firebase")
+                        if (snapshot.exists()) {
+                            val pickupLocation = snapshot.child("origin").value.toString()
+                            val riderId = snapshot.child("rider").value.toString()
+                            Log.d("AcceptRide", "pickupLocation: $pickupLocation, riderId: $riderId")
+
+                            // Fetch rider's phone number from rider_users node
+                            FirebaseDatabase.getInstance().getReference("rider_users")
+                                .child(riderId)
+                                .addListenerForSingleValueEvent(object : ValueEventListener {
+                                    override fun onDataChange(riderSnapshot: DataSnapshot) {
+                                        Log.d("AcceptRide", "Fetched rider data from Firebase")
+                                        if (riderSnapshot.exists()) {
+                                            val riderName = riderSnapshot.child("name").value.toString() // Add this line
+                                            val riderPhoneNumber = riderSnapshot.child("phone").value.toString()
+                                            val riderPhotoUrl = riderSnapshot.child("profileImageUrl").value?.toString()
+
+                                            txtRiderName.text = riderName
+
+                                            if (!riderPhotoUrl.isNullOrEmpty()) {
+                                                Glide.with(requireContext())
+                                                    .load(riderPhotoUrl)
+                                                    .placeholder(R.drawable.baseline_account_circle_24) // Shown while loading
+                                                    .error(R.drawable.baseline_account_circle_24)       // Shown if loading fails
+                                                    .into(imgRider)
+                                            } else {
+                                                imgRider.setImageResource(R.drawable.baseline_account_circle_24)
+                                            }
+
+                                            Log.d("AcceptRide", "riderPhoneNumber: $riderPhoneNumber")
+
+                                            // Set click listeners with fetched data
+                                            btnStartUber.setOnClickListener {
+                                                val coordinates = pickupLocation.split(",")
+                                                if (coordinates.size == 2) {
+                                                    val pickupLatLng = LatLng(coordinates[0].toDouble(), coordinates[1].toDouble())
+                                                    val myLocation = mMap.myLocation
+                                                    if (myLocation != null) {
+                                                        val driverLatLng = LatLng(myLocation.latitude, myLocation.longitude)
+
+                                                        // Remove old markers if needed
+                                                        mMap.clear()
+
+                                                        // Driver marker (car icon)
+                                                        driverMarker = mMap.addMarker(
+                                                            MarkerOptions()
+                                                                .position(driverLatLng)
+                                                                .icon(BitmapDescriptorFactory.fromBitmap(resizeBitmap(requireContext(), R.drawable.car, 35, 80)))
+                                                                .title("You")
+                                                        )
+
+                                                        // Rider marker (red marker)
+                                                        mMap.addMarker(
+                                                            MarkerOptions()
+                                                                .position(pickupLatLng)
+                                                                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
+                                                                .title("Pickup")
+                                                        )
+
+                                                        // Draw route as you already do
+                                                        drawRoute(driverLatLng, pickupLatLng)
+                                                    }
+                                                }
+                                            }
+
+                                            imgCallRider.setOnClickListener {
+                                                Log.d("AcceptRide", "imgCallRider clicked, opening dialer")
+                                                if (riderPhoneNumber.isNotEmpty()) {
+                                                    val intent = Intent(Intent.ACTION_DIAL)
+                                                    intent.data =
+                                                        Uri.parse("tel:$riderPhoneNumber")
+                                                    startActivity(intent)
+                                                }
+                                            }
+
+                                            // Show rider info layout
+                                            riderInfoLayout.visibility = View.VISIBLE
+                                            Log.d("AcceptRide", "Rider info layout is now visible")
+                                        } else {
+                                            Log.e("AcceptRide", "Rider snapshot does not exist")
+                                        }
+                                    }
+
+                                    override fun onCancelled(error: DatabaseError) {
+                                        Log.e("AcceptRide", "Failed to fetch rider: ${error.message}")
+                                    }
+                                })
+                        } else {
+                            Log.e("AcceptRide", "Trip snapshot does not exist")
+                        }
+                    }
+
+                    override fun onCancelled(error: DatabaseError) {
+                        Log.e("AcceptRide", "Failed to fetch trip: ${error.message}")
+                    }
+                })
+            }
+        })
+    }
+
+
+
+    private fun declineRide(event: DriverRequestReceived) {
+        Log.d("RideUpdate", "declineRide called for key: ${event.tripId}")
+        val tripId = event.tripId
+
+        val rideRef = FirebaseDatabase.getInstance().getReference("Trips").child(tripId)
+        val updates = mapOf(
+            "driverId" to FirebaseAuth.getInstance().currentUser!!.uid,
+            "status" to "declined"
+        )
+        rideRef.updateChildren(updates)
+            .addOnSuccessListener {
+                Log.d("TripUpdate", "Ride declined and updated in Firebase")
+                Toast.makeText(context, "Ride Declined!", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener { error ->
+                Log.e("TripUpdate", "Failed to decline ride: ${error.message}")
+                Toast.makeText(context, "Failed to decline ride: ${error.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
+    private fun startTripLocationUpdates() {
+        // You can re-use the same locationRequest or make a new one if you want different intervals
+        locationCallback = object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult) {
+                val location = locationResult.lastLocation ?: return
+                // Now activeTripId is guaranteed to be set
+                updateDriverLocation(activeTripId, location.latitude, location.longitude)
+            }
+        }
+        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
+    }
+
+
+
+    private fun drawRoute(origin: LatLng, destination: LatLng) {
+        val originString = "${origin.latitude},${origin.longitude}"
+        val destinationString = "${destination.latitude},${destination.longitude}"
+
+
+        compositeDisposable.add(
+            iGoogleAPI.getDirections(
+                "driving",
+                "less_driving",
+                originString,
+                destinationString,
+                getString(R.string.maps_directions_api_key)
+            )
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({ response ->
+                    val jsonObject = JSONObject(response)
+                    val routes = jsonObject.getJSONArray("routes")
+                    if (routes.length() > 0) {
+                        val overviewPolyline = routes.getJSONObject(0)
+                            .getJSONObject("overview_polyline")
+                            .getString("points")
+                        val polylineList = PolyUtil.decode(overviewPolyline) // This is List<LatLng>
+                        animatePolyline(polylineList)
+                    }else {
+                        Log.e("Route", "No routes found in response")
+                    }
+                }, { throwable ->
+                    Log.e("Route", "Error fetching route: ${throwable.message}")
+                })
+        )
+    }
+
+    private fun animatePolyline(polylineList: List<LatLng>) {
+        // Always remove the previous polyline before adding a new one
+        routePolyline?.remove()
+        routePolyline = mMap.addPolyline(
+            PolylineOptions()
+                .color(Color.BLACK)
+                .width(8f)
+                .addAll(polylineList)
+        )
+    }
 
     override fun onResume() {
         super.onResume()

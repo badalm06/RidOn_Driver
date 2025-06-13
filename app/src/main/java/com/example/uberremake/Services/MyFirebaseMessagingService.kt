@@ -25,23 +25,20 @@ class MyFirebaseMessagingService: FirebaseMessagingService() {
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
 
-       //  Optional: Show a Toast for debugging (remove in production)
-//        android.os.Handler(android.os.Looper.getMainLooper()).post {
-//            Toast.makeText(this, "FCM RECEIVED!", Toast.LENGTH_LONG).show()
-//        }
+
 
         Log.d("FCM_DEBUG", "Message received: ${remoteMessage.data}")
         val data = remoteMessage.data
 
         // Extract fields directly using the keys as sent by backend
         val notiTitle = data["NOTI_TITLE"]
-        val riderKey = data["RiderKey"]
+        val tripId = data["trip_id"]
         val pickupLocation = data["PickupLocation"]
 
-        if (notiTitle == "REQUEST_DRIVER_TITLE" && riderKey != null && pickupLocation != null) {
-            Log.d("EVENTBUS", "Sticky event posted: $riderKey, $pickupLocation")
+        if (notiTitle == "REQUEST_DRIVER_TITLE" && tripId != null && pickupLocation != null) {
+            Log.d("EVENTBUS", "Sticky event posted: $tripId, $pickupLocation")
             EventBus.getDefault().postSticky(
-                DriverRequestReceived(riderKey, pickupLocation)
+                DriverRequestReceived(tripId, pickupLocation)
             )
         } else {
             Log.e("FCM_DEBUG", "Missing fields or NOTI_TITLE mismatch: $data")
@@ -56,26 +53,4 @@ class MyFirebaseMessagingService: FirebaseMessagingService() {
              )
         }
     }
-
-//    override fun onMessageReceived(remoteMessage: RemoteMessage) {
-//        super.onMessageReceived(remoteMessage)
-//        val data = remoteMessage.data
-//        if(data != null) {
-//            if(data[Common.NOTI_TITLE].equals(Common.REQUEST_DRIVER_TITLE)) {
-//
-//                EventBus.getDefault()
-//                    .postSticky(DriverRequestReceived(
-//                        data[Common.RIDER_KEY]!!,
-//                        data[Common.PICKUP_LOCATION]!!,
-//                    ))
-//            }
-//            else {
-//                Common.showNotification(this, Random.nextInt(),
-//                    data[Common.NOTI_TITLE],
-//                    data[Common.NOTI_BODY],
-//                    null)
-//            }
-//        }
-//
-//    }
 }

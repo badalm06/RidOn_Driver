@@ -9,7 +9,13 @@ import com.example.uberremake.Services.MyFirebaseMessagingService
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 
-data class User(var name: String ="", var email: String = "", var number: String ="", var profileImageUrl: String? = null
+data class User(
+    var name: String ="",
+    var email: String = "",
+    var number: String ="",
+    var profileImageUrl: String? = null,
+    var car: String = "",
+    var carNumber: String = ""
 ) {
 
     companion object {

@@ -134,4 +134,120 @@
 
      </androidx.cardview.widget.CardView>
 
+    <androidx.cardview.widget.CardView
+        android:id="@+id/rider_info_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_margin="8dp"
+        android:visibility="gone"
+        app:cardBackgroundColor="@color/white"
+        android:elevation="8dp">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp">
+
+            <!-- ETA and Distance Row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <TextView
+                    android:id="@+id/txt_eta"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="10 min"
+                    android:textStyle="bold"
+                    android:textColor="#4CAF50"
+                    android:textSize="16sp"
+                    android:drawableLeft="@drawable/baseline_access_time_24"
+                    android:drawablePadding="4dp"/>
+
+                <TextView
+                    android:id="@+id/txt_distance"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="2.5 km"
+                    android:textStyle="bold"
+                    android:textColor="#2196F3"
+                    android:textSize="16sp"
+                    android:layout_marginStart="16dp"
+                    android:drawableLeft="@drawable/baseline_directions_car_24"
+                    android:drawablePadding="4dp"/>
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="8dp" />
+
+            <!-- Rider Info Row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <de.hdodenhof.circleimageview.CircleImageView
+                    android:id="@+id/img_rider"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:src="@drawable/baseline_account_circle_24"
+                    android:layout_marginEnd="12dp"/>
+
+                <LinearLayout
+                    android:orientation="vertical"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1">
+
+                    <TextView
+                        android:id="@+id/txt_rider_name"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Rider Name"
+                        android:textStyle="bold"
+                        android:textSize="18sp"
+                        android:textColor="#222"/>
+
+                    <TextView
+                        android:id="@+id/txt_rider_rating"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="4.9 ★"
+                        android:textSize="14sp"
+                        android:textColor="#888"/>
+                </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/img_call_rider"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/baseline_local_phone_24"
+                    android:contentDescription="Call Rider"
+                    android:padding="6dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"/>
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="8dp" />
+
+            <Button
+                android:id="@+id/btn_start_uber"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Start Uber"
+                android:backgroundTint="#FF9800"
+                android:textColor="#fff"
+                android:textStyle="bold"
+                android:layout_marginTop="8dp"/>
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+
 </FrameLayout>

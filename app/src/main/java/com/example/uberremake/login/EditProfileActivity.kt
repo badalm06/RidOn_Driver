@@ -4,11 +4,16 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
 import android.net.Uri
+import android.graphics.Color
 import android.os.Bundle
 import android.provider.MediaStore
 import android.text.InputType
+import android.view.View
+import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
@@ -37,6 +42,16 @@ class EditProfileActivity : AppCompatActivity() {
     private var isEditing = false
     private var selectedImageUri: Uri? = null
 
+    // Added for car fields
+    private val carList = listOf(
+        "Select Car Model", // Hint for Spinner
+        "Maruti Suzuki Dzire", "Maruti Suzuki Wagon R", "Maruti Suzuki Celerio", "Maruti Suzuki Ertiga",
+        "Maruti Suzuki Alto K10", "Maruti Suzuki Eeco", "Hyundai Aura", "Hyundai Grand i10 Nios", "Tata Tiago",
+        "Tata Tigor", "Honda Amaze", "Toyota Innova Crysta", "Mahindra Marazzo", "Mahindra Scorpio",
+        "Kia Carens"
+    )
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityEditProfileBinding.inflate(layoutInflater)
@@ -55,12 +70,36 @@ class EditProfileActivity : AppCompatActivity() {
         storageReference = FirebaseStorage.getInstance().getReference("profile_images/${user!!.uid}")
         profileImageView = binding.profileImage
 
+        // Spinner setup: Place this in onCreate, after binding initialization
+        val spinnerAdapter = object : ArrayAdapter<String>(
+            this,
+            android.R.layout.simple_spinner_item,
+            carList
+        ) {
+            override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+                val view = super.getView(position, convertView, parent)
+                (view as TextView).setTextColor(Color.BLACK) // Set selected item color to black
+                return view
+            }
+
+            override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View {
+                val view = super.getDropDownView(position, convertView, parent)
+                (view as TextView).setTextColor(Color.BLACK) // Set dropdown items color to black
+                return view
+            }
+        }
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        binding.etSelectCar.adapter = spinnerAdapter
+
+
         loadUserProfile()
 
         binding.btnBack.setOnClickListener {
             val name = binding.etName.text.toString().trim()
             val phone = binding.etPhone.text.toString().trim()
             val email = binding.etEmail.text.toString().trim()
+            val car = binding.etSelectCar.selectedItem.toString()
+            val carNumber = binding.etCarNumber.text.toString().trim()
 
             var isValid = true
 
@@ -79,6 +118,18 @@ class EditProfileActivity : AppCompatActivity() {
                 binding.etEmail.error = "Enter a valid email"
                 isValid = false
             }
+            if (binding.etSelectCar.selectedItemPosition == 0) { // 0 is the hint position
+                Toast.makeText(this, "Car selection is required", Toast.LENGTH_SHORT).show()
+                isValid = false
+            }
+            if (carNumber.isEmpty()) {
+                binding.etCarNumber.error = "Car number is required"
+                isValid = false
+            } else if (!isValidIndianCarNumber(carNumber)) {
+                binding.etCarNumber.error = "Enter a valid car number (e.g. MH12AB1234)"
+                isValid = false
+            }
+
 
             if (isValid) {
                 // Save profile before navigating
@@ -92,6 +143,9 @@ class EditProfileActivity : AppCompatActivity() {
             val name = binding.etName.text.toString().trim()
             val phone = binding.etPhone.text.toString().trim()
             val email = binding.etEmail.text.toString().trim()
+            val car = binding.etSelectCar.selectedItem.toString()
+            val carNumber = binding.etCarNumber.text.toString().trim()
+
 
             var isValid = true
 
@@ -110,6 +164,18 @@ class EditProfileActivity : AppCompatActivity() {
                 binding.etEmail.error = "Enter a valid email"
                 isValid = false
             }
+            if (binding.etSelectCar.selectedItemPosition == 0) { // 0 is the hint position
+                Toast.makeText(this, "Car selection is required", Toast.LENGTH_SHORT).show()
+                isValid = false
+            }
+            if (carNumber.isEmpty()) {
+                binding.etCarNumber.error = "Car number is required"
+                isValid = false
+            } else if (!isValidIndianCarNumber(carNumber)) {
+                binding.etCarNumber.error = "Enter a valid car number (e.g. MH12AB1234)"
+                isValid = false
+            }
+
 
             if (isValid) {
                 // All fields are filled and valid, proceed
@@ -149,6 +215,12 @@ class EditProfileActivity : AppCompatActivity() {
         }
     }
 
+    fun isValidIndianCarNumber(carNumber: String): Boolean {
+        val regex = Regex("^[A-Z]{2}[0-9]{1,2}[A-Z]{1,3}[0-9]{4}$")
+        return regex.matches(carNumber.replace("\\s".toRegex(), "").uppercase())
+    }
+
+
 
     private fun loadUserProfile() {
         user?.let { currentUser ->
@@ -157,10 +229,17 @@ class EditProfileActivity : AppCompatActivity() {
                     val name = snapshot.child("name").getValue(String::class.java) ?: ""
                     val phone = snapshot.child("phone").getValue(String::class.java) ?: ""
                     val email = snapshot.child("email").getValue(String::class.java) ?: ""
+                    val car = snapshot.child("car").getValue(String::class.java) ?: ""
+                    val carNumber = snapshot.child("carNumber").getValue(String::class.java) ?: ""
 
                     binding.etName.setText(name)
                     binding.etPhone.setText(phone)
                     binding.etEmail.setText(email)
+                    val carPosition = carList.indexOf(car)
+                    if (carPosition >= 0) {
+                        binding.etSelectCar.setSelection(carPosition)
+                    }
+                    binding.etCarNumber.setText(carNumber)
 
                     // Only allow editing email if user email is empty
                     binding.etEmail.isEnabled = email.isEmpty()
@@ -196,15 +275,28 @@ class EditProfileActivity : AppCompatActivity() {
         binding.etName.isEnabled = editable
         binding.etPhone.isEnabled = editable
         binding.etEmail.isEnabled = editable && (user?.email.isNullOrEmpty())
+        binding.etSelectCar.isEnabled = editable
+        binding.etCarNumber.isEnabled = editable
     }
 
     private fun saveUserProfile(onSuccess: () -> Unit) {
         val name = binding.etName.text.toString().trim()
         val phone = binding.etPhone.text.toString().trim()
         val email = binding.etEmail.text.toString().trim()
+        val car = binding.etSelectCar.selectedItem.toString()
+        val carNumber = binding.etCarNumber.text.toString().trim()
+
 
         if (name.isEmpty() || phone.isEmpty()) {
             Toast.makeText(this, "Name and Phone cannot be empty", Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (car.isEmpty()) { // Added for car fields
+            Toast.makeText(this, "Car selection cannot be empty", Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (carNumber.isEmpty()) { // Added for car fields
+            Toast.makeText(this, "Car number cannot be empty", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -214,12 +306,12 @@ class EditProfileActivity : AppCompatActivity() {
                     val currentPhone = snapshot.getValue(String::class.java)
                     if (currentPhone != phone) {
                         // Phone changed, verify via OTP
-                        sendOtpForVerification(phone, name, email, onSuccess)
+                        sendOtpForVerification(phone, name, email, car, carNumber, onSuccess)
                     } else {
                         if (selectedImageUri != null) {
-                            uploadImageAndSaveProfile(name, phone, email, onSuccess)
+                            uploadImageAndSaveProfile(name, phone, email, car, carNumber, onSuccess)
                         } else {
-                            updateProfile(name, phone, email, null, onSuccess)
+                            updateProfile(name, phone, email, null, car, carNumber, onSuccess)
                         }
                     }
                 }
@@ -231,9 +323,9 @@ class EditProfileActivity : AppCompatActivity() {
         }
     }
 
-    private fun uploadImageAndSaveProfile(name: String, phone: String, email: String, onSuccess: () -> Unit) {
+    private fun uploadImageAndSaveProfile(name: String, phone: String, email: String, car: String, carNumber: String, onSuccess: () -> Unit) {
         if (selectedImageUri == null) {
-            updateProfile(name, phone, email, null, onSuccess)
+            updateProfile(name, phone, email, null, car, carNumber, onSuccess)
             return
         }
 
@@ -242,24 +334,24 @@ class EditProfileActivity : AppCompatActivity() {
                 storageReference.downloadUrl.addOnSuccessListener { uri ->
                     val imageUrl = uri.toString()
                     Glide.with(this).load(uri).into(profileImageView)
-                    updateProfile(name, phone, email, imageUrl, onSuccess)
+                    updateProfile(name, phone, email, imageUrl, car, carNumber, onSuccess)
                 }
             }
             .addOnFailureListener {
                 Toast.makeText(this, "Image upload failed", Toast.LENGTH_SHORT).show()
-                updateProfile(name, phone, email, null, onSuccess)
+                updateProfile(name, phone, email, null, car, carNumber, onSuccess)
             }
     }
 
 
-    private fun sendOtpForVerification(phoneNumber: String, name: String, email: String, onSuccess: () -> Unit) {
+    private fun sendOtpForVerification(phoneNumber: String, name: String, email: String, car: String, carNumber: String, onSuccess: () -> Unit) {
         val options = PhoneAuthOptions.newBuilder(firebaseAuth)
             .setPhoneNumber("+91$phoneNumber")
             .setTimeout(60L, TimeUnit.SECONDS)
             .setActivity(this)
             .setCallbacks(object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
                 override fun onVerificationCompleted(credential: PhoneAuthCredential) {
-                    verifyOtpAndSave(credential, name, phoneNumber, email, onSuccess)
+                    verifyOtpAndSave(credential, name, phoneNumber, email, car, carNumber, onSuccess)
                 }
 
                 override fun onVerificationFailed(e: FirebaseException) {
@@ -267,7 +359,7 @@ class EditProfileActivity : AppCompatActivity() {
                 }
 
                 override fun onCodeSent(verificationId: String, token: PhoneAuthProvider.ForceResendingToken) {
-                    showOtpDialog(verificationId, name, phoneNumber, email, onSuccess)
+                    showOtpDialog(verificationId, name, phoneNumber, email, car, carNumber, onSuccess)
                 }
             }).build()
 
@@ -280,6 +372,8 @@ class EditProfileActivity : AppCompatActivity() {
         name: String,
         phone: String,
         email: String,
+        car: String,
+        carNumber: String,
         onSuccess: () -> Unit
     ) {
         val input = EditText(this)
@@ -291,7 +385,7 @@ class EditProfileActivity : AppCompatActivity() {
             .setPositiveButton("Verify") { _, _ ->
                 val otp = input.text.toString()
                 val credential = PhoneAuthProvider.getCredential(verificationId, otp)
-                verifyOtpAndSave(credential, name, phone, email, onSuccess)
+                verifyOtpAndSave(credential, name, phone, email, car, carNumber, onSuccess)
             }
             .setNegativeButton("Cancel", null)
             .show()
@@ -303,6 +397,8 @@ class EditProfileActivity : AppCompatActivity() {
         name: String,
         phone: String,
         email: String,
+        car: String,
+        carNumber: String,
         onSuccess: () -> Unit
     ) {
         val currentUser = firebaseAuth.currentUser
@@ -314,9 +410,9 @@ class EditProfileActivity : AppCompatActivity() {
                     if (task.isSuccessful) {
                         user = firebaseAuth.currentUser
                         if (selectedImageUri != null) {
-                            uploadImageAndSaveProfile(name, phone, email, onSuccess)
+                            uploadImageAndSaveProfile(name, phone, email, car, carNumber, onSuccess)
                         } else {
-                            updateProfile(name, phone, email, null, onSuccess)
+                            updateProfile(name, phone, email, null, car, carNumber, onSuccess)
                         }
                     } else {
                         Toast.makeText(this, "Invalid OTP", Toast.LENGTH_SHORT).show()
@@ -327,9 +423,9 @@ class EditProfileActivity : AppCompatActivity() {
             if (currentUser.phoneNumber == "+91$phone") {
                 // Already linked, just update profile
                 if (selectedImageUri != null) {
-                    uploadImageAndSaveProfile(name, phone, email, onSuccess)
+                    uploadImageAndSaveProfile(name, phone, email, car, carNumber, onSuccess)
                 } else {
-                    updateProfile(name, phone, email, null, onSuccess)
+                    updateProfile(name, phone, email, null, car, carNumber, onSuccess)
                 }
             } else if (currentUser.providerData.any { it.providerId == "phone" }) {
                 // User already has a phone linked, so update it
@@ -337,9 +433,9 @@ class EditProfileActivity : AppCompatActivity() {
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
                             if (selectedImageUri != null) {
-                                uploadImageAndSaveProfile(name, phone, email, onSuccess)
+                                uploadImageAndSaveProfile(name, phone, email, car, carNumber, onSuccess)
                             } else {
-                                updateProfile(name, phone, email, null, onSuccess)
+                                updateProfile(name, phone, email, null, car, carNumber, onSuccess)
                             }
                         } else {
                             Toast.makeText(this, "Could not update phone: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
@@ -351,9 +447,9 @@ class EditProfileActivity : AppCompatActivity() {
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
                             if (selectedImageUri != null) {
-                                uploadImageAndSaveProfile(name, phone, email, onSuccess)
+                                uploadImageAndSaveProfile(name, phone, email, car, carNumber, onSuccess)
                             } else {
-                                updateProfile(name, phone, email, null, onSuccess)
+                                updateProfile(name, phone, email, null, car, carNumber, onSuccess)
                             }
                         } else {
                             Toast.makeText(this, "Invalid OTP or phone already linked", Toast.LENGTH_SHORT).show()
@@ -365,11 +461,20 @@ class EditProfileActivity : AppCompatActivity() {
 
 
 
-    private fun updateProfile(name: String, phone: String, email: String, imageUrl: String?, onSuccess: () -> Unit) {
+    private fun updateProfile(
+        name: String,
+        phone: String,
+        email: String,
+        imageUrl: String?,
+        car: String,
+        carNumber: String,
+        onSuccess: () -> Unit) {
         val userData = mutableMapOf<String, Any>(
             "name" to name,
             "phone" to phone,
-            "email" to email
+            "email" to email,
+            "car" to car,
+            "carNumber" to carNumber
         )
         if (imageUrl != null) {
             userData["profileImageUrl"] = imageUrl
@@ -383,6 +488,8 @@ class EditProfileActivity : AppCompatActivity() {
                         this.name = name
                         this.number = phone
                         this.email = email
+                        this.car = car
+                        this.carNumber = carNumber
                         if (imageUrl != null) {
                             this.profileImageUrl = imageUrl
                         }
