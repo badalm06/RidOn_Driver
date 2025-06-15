@@ -34,11 +34,13 @@ class MyFirebaseMessagingService: FirebaseMessagingService() {
         val notiTitle = data["NOTI_TITLE"]
         val tripId = data["trip_id"]
         val pickupLocation = data["PickupLocation"]
+        val destinationLocation = data["DestinationLocation"]
 
-        if (notiTitle == "REQUEST_DRIVER_TITLE" && tripId != null && pickupLocation != null) {
-            Log.d("EVENTBUS", "Sticky event posted: $tripId, $pickupLocation")
+
+        if (notiTitle == "REQUEST_DRIVER_TITLE" && tripId != null && pickupLocation != null && destinationLocation != null) {
+            Log.d("EVENTBUS", "Sticky event posted: $tripId, $pickupLocation, $destinationLocation")
             EventBus.getDefault().postSticky(
-                DriverRequestReceived(tripId, pickupLocation)
+                DriverRequestReceived(tripId, pickupLocation, destinationLocation)
             )
         } else {
             Log.e("FCM_DEBUG", "Missing fields or NOTI_TITLE mismatch: $data")

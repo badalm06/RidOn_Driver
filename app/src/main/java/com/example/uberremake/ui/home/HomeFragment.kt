@@ -1,7 +1,9 @@
 package com.example.uberremake.ui.home
 
 import android.Manifest
+import android.R.attr.duration
 import android.animation.ValueAnimator
+import android.annotation.SuppressLint
 import android.app.AlertDialog
 import com.google.maps.android.PolyUtil
 import android.content.Context
@@ -28,7 +30,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.animation.LinearInterpolator
 import android.widget.Button
+import android.widget.FrameLayout
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.RelativeLayout
 import android.widget.TextView
@@ -51,6 +55,8 @@ import com.example.uberremake.Remote.RetrofitClient
 import com.example.uberremake.databinding.FragmentHomeBinding
 import com.firebase.geofire.GeoFire
 import com.firebase.geofire.GeoLocation
+import com.firebase.geofire.GeoQuery
+import com.firebase.geofire.util.GeoUtils.distance
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -107,6 +113,7 @@ import java.io.IOException
 import java.sql.Time
 import java.util.Locale
 import java.util.concurrent.TimeUnit
+import kotlin.compareTo
 import kotlin.math.log
 
 class HomeFragment : Fragment(), OnMapReadyCallback {
@@ -118,10 +125,23 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private var timerDisposable: Disposable? = null
     private lateinit var txt_estimate_time: TextView
     private lateinit var txt_estimate_distance: TextView
+    private lateinit var txt_trip_time: TextView
+    private lateinit var txt_trip_distance: TextView
     private var pickupMarker: Marker? = null
     private var driverMarker: Marker? = null
     private var routeAnimator: ValueAnimator? = null
     private var routePolyline: Polyline? = null
+
+    private lateinit var root_layout: FrameLayout
+    private var isRideStarted = false
+    private var isRideInProgress = false
+
+
+
+    private var lastRouteUpdateTime = 0L
+    private var lastRouteLocation: LatLng? = null
+
+
 
 
     // Rider Info Layout
@@ -133,7 +153,11 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private lateinit var txtRiderRating: TextView
     private lateinit var imgCallRider: ImageView
     private lateinit var btnStartUber: Button
+    private lateinit var btnStartRide: Button
+    private lateinit var btnCompleteRide: Button
     private lateinit var activeTripId: String
+
+
 
 
     // Accept or Decline
@@ -169,6 +193,10 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private var currentUserRef: DatabaseReference? = null
     private lateinit var driversLocationRef: DatabaseReference
     private lateinit var geoFire: GeoFire
+    private lateinit var riderOriginLatLng: LatLng
+    private var destinationLatLng: LatLng? = null
+
+
 
     private val onlineValueEventListener = object : ValueEventListener {
         override fun onDataChange(p0: DataSnapshot) {
@@ -256,6 +284,10 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         circularProgressBar = root.findViewById(R.id.circularProgressBar) as ProgressBar
         txt_estimate_time = root.findViewById(R.id.txt_estimate_time) as TextView
         txt_estimate_distance = root.findViewById(R.id.txt_estimate_distance) as TextView
+        txt_trip_time = root.findViewById(R.id.txt_trip_time) as TextView
+        txt_trip_distance = root.findViewById(R.id.txt_trip_distance) as TextView
+        root_layout = root.findViewById(R.id.root_layout) as FrameLayout
+
         riderInfoLayout = root.findViewById(R.id.rider_info_layout) as CardView
         txtEta = root.findViewById(R.id.txt_eta) as TextView
         txtDistance = root.findViewById(R.id.txt_distance) as TextView
@@ -264,6 +296,9 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
      //   txtRiderRating = root.findViewById(R.id.txt_rider_rating) as TextView
         imgCallRider = root.findViewById(R.id.img_call_rider) as ImageView
         btnStartUber = root.findViewById(R.id.btn_start_uber) as Button
+        btnStartRide = root.findViewById(R.id.btn_start_ride) as Button
+        btnCompleteRide = root.findViewById(R.id.btn_complete_ride) as Button
+
 
 
     }
@@ -374,12 +409,17 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     val locationButton = (mapFragment.requireView()
                         .findViewById<View>("1".toInt())
                         .parent!! as View)
-                    .findViewById<View>("2".toInt())
+                        .findViewById<View>("2".toInt())
                     val params = locationButton.layoutParams as RelativeLayout.LayoutParams
-                    params.addRule(RelativeLayout.ALIGN_PARENT_TOP, 0)
-                    params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE)
-                    params.bottomMargin = 350
 
+                    params.removeRule(RelativeLayout.ALIGN_PARENT_BOTTOM)
+                    params.removeRule(RelativeLayout.ALIGN_PARENT_LEFT)
+                    params.removeRule(RelativeLayout.ALIGN_PARENT_RIGHT)
+                    params.removeRule(RelativeLayout.ALIGN_PARENT_TOP)
+
+                    params.addRule(RelativeLayout.ALIGN_PARENT_TOP, RelativeLayout.TRUE)
+                    params.addRule(RelativeLayout.ALIGN_PARENT_END, RelativeLayout.TRUE)
+                    params.setMargins(0, 50, 50, 0) // top, right, bottom, left
                 }
 
                 override fun onPermissionDenied(p0: PermissionDeniedResponse?) {
@@ -414,11 +454,14 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         return Bitmap.createScaledBitmap(imageBitmap, width, height, false)
     }
 
+    @SuppressLint("CheckResult")
     @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
     fun onDriverRequestReceived(event: DriverRequestReceived) {
         Log.d("EVENTBUS", "onDriverRequestReceived called with: $event")
         isRequestHandled = false
+        mMap.isMyLocationEnabled = true
+
 
         //   Toast.makeText(context, "Popup Event Received!", Toast.LENGTH_SHORT).show()
 
@@ -456,6 +499,9 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                                     polylineList = Common.decodePoly(polyline)
                                     Log.d("ROUTE_DEBUG", "Polyline list size: ${polylineList?.size}") // 4
                                 }
+
+
+
 
                                 // Remove old polylines before drawing new ones
                                 greyPolyline?.remove()
@@ -509,10 +555,16 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                                 }
 
                                 val origin = LatLng(location.latitude, location.longitude)
+
                                 val destination = LatLng(
                                     event.pickupLocation.split(",")[0].toDouble(),
                                     event.pickupLocation.split(",")[1].toDouble()
                                 )
+                                riderOriginLatLng = LatLng(
+                                    event.pickupLocation.split(",")[0].toDouble(),
+                                    event.pickupLocation.split(",")[1].toDouble()
+                                )
+
                                 Log.d("ROUTE_DEBUG", "Origin: $origin, Destination: $destination") // 7
 
                                 val latLngBound = LatLngBounds.Builder()
@@ -531,8 +583,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                                 txt_estimate_time.text = duration
                                 txt_estimate_distance.text = distance
 
-                                txtEta.text = duration
-                                txtDistance.text = distance
 
                                 // Add marker at driver's current location (origin)
                                 mMap.isMyLocationEnabled = true
@@ -546,6 +596,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                                         .icon(BitmapDescriptorFactory.defaultMarker())
                                         .title("Pickup Location")
                                 )
+
                                 Log.d("ROUTE_DEBUG", "Marker added at: $destination") // 8
 
                                 mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(latLngBound, 160))
@@ -556,6 +607,39 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                                 // Show popup
                                 chip_decline.visibility = View.VISIBLE
                                 layout_accept.visibility = View.VISIBLE
+
+                                val riderOrigin = event.pickupLocation
+                                val riderDestination = event.destinationLocation
+                                iGoogleAPI.getDirections(
+                                    "driving",
+                                    "less_driving",
+                                    riderOrigin,
+                                    riderDestination,
+                                    getString(R.string.maps_directions_api_key)
+                                )
+                                    .subscribeOn(Schedulers.io())
+                                    .observeOn(AndroidSchedulers.mainThread())
+                                    .subscribe({ tripResult ->
+                                        try {
+                                            val tripJson = JSONObject(tripResult)
+                                            val tripRoutes = tripJson.getJSONArray("routes")
+                                            if (tripRoutes.length() > 0) {
+                                                val tripLegs = tripRoutes.getJSONObject(0).getJSONArray("legs")
+                                                if (tripLegs.length() > 0) {
+                                                    val tripLeg = tripLegs.getJSONObject(0)
+                                                    val tripDuration = tripLeg.getJSONObject("duration").getString("text")
+                                                    val tripDistance = tripLeg.getJSONObject("distance").getString("text")
+                                                    txt_trip_time.text = "Trip Time: $tripDuration"
+                                                    txt_trip_distance.text = "Trip Distance: $tripDistance"
+                                                }
+                                            }
+                                        } catch (e: Exception) {
+                                            Log.e("TRIP_DEBUG", "Trip route parsing error: ${e.message}")
+                                        }
+                                    }, { error ->
+                                        Log.e("TRIP_DEBUG", "Trip Directions API error: ${error.message}")
+                                    })
+
                                 // Reset progress bar to full
                                 circularProgressBar.progress = 100
 
@@ -621,6 +705,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             }
     }
 
+
     private fun clearRoute() {
         // Stop the animator
         routeAnimator?.cancel()
@@ -631,6 +716,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         greyPolyline = null
         blackPolyline?.remove()
         blackPolyline = null
+
     }
 
     fun updateDriverLocation(tripId: String, lat: Double, lng: Double) {
@@ -708,6 +794,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                         if (snapshot.exists()) {
                             val pickupLocation = snapshot.child("origin").value.toString()
                             val riderId = snapshot.child("rider").value.toString()
+
+
                             Log.d("AcceptRide", "pickupLocation: $pickupLocation, riderId: $riderId")
 
                             // Fetch rider's phone number from rider_users node
@@ -740,34 +828,139 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                                                 val coordinates = pickupLocation.split(",")
                                                 if (coordinates.size == 2) {
                                                     val pickupLatLng = LatLng(coordinates[0].toDouble(), coordinates[1].toDouble())
-                                                    val myLocation = mMap.myLocation
-                                                    if (myLocation != null) {
-                                                        val driverLatLng = LatLng(myLocation.latitude, myLocation.longitude)
 
-                                                        // Remove old markers if needed
-                                                        mMap.clear()
+                                                    if (checkLocationPermission()) {
+                                                        val myLocation = mMap.myLocation
+                                                        if (myLocation != null) {
+                                                            val driverLatLng = LatLng(
+                                                                myLocation.latitude,
+                                                                myLocation.longitude
+                                                            )
 
-                                                        // Driver marker (car icon)
-                                                        driverMarker = mMap.addMarker(
-                                                            MarkerOptions()
-                                                                .position(driverLatLng)
-                                                                .icon(BitmapDescriptorFactory.fromBitmap(resizeBitmap(requireContext(), R.drawable.car, 35, 80)))
-                                                                .title("You")
-                                                        )
+                                                            // Remove old markers if needed
+                                                            mMap.clear()
 
-                                                        // Rider marker (red marker)
-                                                        mMap.addMarker(
-                                                            MarkerOptions()
-                                                                .position(pickupLatLng)
-                                                                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
-                                                                .title("Pickup")
-                                                        )
+                                                            // Driver marker (car icon)
+                                                            driverMarker = mMap.addMarker(
+                                                                MarkerOptions()
+                                                                    .position(driverLatLng)
+                                                                    .icon(
+                                                                        BitmapDescriptorFactory.fromBitmap(
+                                                                            resizeBitmap(
+                                                                                requireContext(),
+                                                                                R.drawable.car,
+                                                                                35,
+                                                                                80
+                                                                            )
+                                                                        )
+                                                                    )
+                                                                    .title("You")
+                                                            )
 
-                                                        // Draw route as you already do
-                                                        drawRoute(driverLatLng, pickupLatLng)
+                                                            // Rider marker (red marker)
+                                                            mMap.addMarker(
+                                                                MarkerOptions()
+                                                                    .position(pickupLatLng)
+                                                                    .icon(
+                                                                        BitmapDescriptorFactory.defaultMarker(
+                                                                            BitmapDescriptorFactory.HUE_RED
+                                                                        )
+                                                                    )
+                                                                    .title("Pickup")
+                                                            )
+
+                                                            drawRoute(driverLatLng, riderOriginLatLng!!)
+
+
+                                                            // Draw route as you already do
+                                                            isRideStarted = true
+                                                            isRideInProgress = false
+                                                            startTripLocationUpdates()
+
+                                                            //       drawRoute(driverLatLng, pickupLatLng)
+
+                                                        }
                                                     }
                                                 }
                                             }
+
+                                            btnStartRide.setOnClickListener {
+                                                isRideInProgress = true
+                                                val destinationLocation = snapshot.child("destination").value?.toString()
+
+                                                if (destinationLocation != null) {
+                                                    val destinationLtgLng = destinationLocation.split(",")
+                                                    if (destinationLtgLng.size == 2) {
+                                                        val destinationLatLng = LatLng(
+                                                            destinationLtgLng[0].toDouble(),
+                                                            destinationLtgLng[1].toDouble()
+                                                        )
+                                                        val driverLatLng = driverMarker?.position ?: return@setOnClickListener
+
+                                                        mMap.clear()
+                                                        // Use destinationLatLng (not destinationLtgLng) for all map functions
+
+                                                        drawRoute(
+                                                           driverLatLng,
+                                                            destinationLatLng
+                                                        )
+
+                                                        startTripLocationUpdates()
+
+
+                                                        if (destinationMarker == null) {
+                                                            destinationMarker = mMap.addMarker(
+                                                                MarkerOptions()
+                                                                    .position(destinationLatLng)
+                                                                    .icon(
+                                                                        BitmapDescriptorFactory.defaultMarker(
+                                                                            BitmapDescriptorFactory.HUE_YELLOW
+                                                                        )
+                                                                    )
+                                                            )
+                                                        }
+                                                        btnStartRide.visibility = View.GONE
+                                                        btnCompleteRide.visibility = View.VISIBLE
+
+                                                        FirebaseDatabase.getInstance().getReference("Trips")
+                                                            .child(tripId)
+                                                            .child("status")
+                                                            .setValue("rideStarted")
+                                                            .addOnSuccessListener {
+                                                                Log.d("TripStatus", "Trip status updated to rideStarted")
+                                                            }
+                                                            .addOnFailureListener { e ->
+                                                                Log.e("TripStatus", "Failed to update trip status: ${e.message}")
+                                                            }
+                                                        fetchRouteAndUpdateDriverUI(
+                                                           driverLatLng,
+                                                            destinationLatLng
+                                                        )
+
+                                                    }
+                                                }
+                                            }
+
+                                            btnCompleteRide.setOnClickListener {
+                                                mMap.clear()
+                                                destinationMarker?.remove()
+                                                destinationMarker = null
+                                                btnCompleteRide.visibility = View.GONE
+                                                btnStartUber.visibility = View.VISIBLE
+
+                                                FirebaseDatabase.getInstance().getReference("Trips")
+                                                    .child(tripId)
+                                                    .child("status")
+                                                    .setValue("completed")
+                                                    .addOnSuccessListener {
+                                                        Log.d("TripStatus", "Trip status updated to completed")
+                                                    }
+                                                    .addOnFailureListener { e ->
+                                                        Log.e("TripStatus", "Failed to update trip status: ${e.message}")
+                                                    }
+                                            }
+
+
 
                                             imgCallRider.setOnClickListener {
                                                 Log.d("AcceptRide", "imgCallRider clicked, opening dialer")
@@ -804,6 +997,12 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         })
     }
 
+    private fun checkLocationPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            requireContext(),
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+    }
 
 
     private fun declineRide(event: DriverRequestReceived) {
@@ -826,18 +1025,137 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             }
     }
 
+
+
     @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     private fun startTripLocationUpdates() {
         // You can re-use the same locationRequest or make a new one if you want different intervals
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
                 val location = locationResult.lastLocation ?: return
+                val driverCurrentLatLng = LatLng(location.latitude, location.longitude)
+                val driverLatLng = driverMarker?.position ?: return
+
+
                 // Now activeTripId is guaranteed to be set
                 updateDriverLocation(activeTripId, location.latitude, location.longitude)
+
+                val driverLocation = LatLng(location.latitude, location.longitude)
+                // Ensure riderOriginLatLng is not null
+                riderOriginLatLng?.let { pickupLatLng ->
+                    val distanceToPickup = FloatArray(1)
+                    Location.distanceBetween(
+                        driverLocation.latitude, driverLocation.longitude,
+                        pickupLatLng.latitude, pickupLatLng.longitude,
+                        distanceToPickup
+                    )
+                    if (distanceToPickup[0] <= 50) {
+                        // Driver is within 50 meters of pickup
+                        btnStartUber.visibility = View.GONE
+                        btnStartRide.visibility = View.VISIBLE
+                        // Optionally, show a toast to the rider: "Driver Arrived"
+                    } else {
+                        btnStartUber.visibility = View.VISIBLE
+                        btnStartRide.visibility = View.GONE
+                    }
+                }
+                if (destinationLatLng != null) {
+                     updateTripTimeAndDistance(driverCurrentLatLng, destinationLatLng!!)
+                }
+
+                if (isRideStarted && !isRideInProgress && riderOriginLatLng != null) {
+                    drawRoute(driverCurrentLatLng, riderOriginLatLng!!)
+                    // Optionally, update trip time and distance here
+                    updateTripTimeAndDistance(driverCurrentLatLng, riderOriginLatLng!!)
+                }
+
+                if (isRideInProgress && destinationLatLng != null) {
+                    drawRoute(driverLatLng, destinationLatLng!!)
+                    // Optionally, update trip time and distance here
+                    updateTripTimeAndDistance(driverCurrentLatLng, destinationLatLng!!)
+                }
+
+                fetchRouteAndUpdateDriverUI(
+                    LatLng(location.latitude, location.longitude),
+                    riderOriginLatLng
+                )
+
             }
         }
         fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
     }
+
+    private fun updateTripTimeAndDistance(origin: LatLng, destination: LatLng) {
+        val originString = "${origin.latitude},${origin.longitude}"
+        val destinationString = "${destination.latitude},${destination.longitude}"
+
+        compositeDisposable.add(
+            iGoogleAPI.getDirections(
+                "driving",
+                "less_driving",
+                originString,
+                destinationString,
+                getString(R.string.maps_directions_api_key)
+            )
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({ tripResult ->
+                    try {
+                        val tripJson = JSONObject(tripResult)
+                        val tripRoutes = tripJson.getJSONArray("routes")
+                        if (tripRoutes.length() > 0) {
+                            val tripLegs = tripRoutes.getJSONObject(0).getJSONArray("legs")
+                            if (tripLegs.length() > 0) {
+                                val tripLeg = tripLegs.getJSONObject(0)
+                                val tripDuration = tripLeg.getJSONObject("duration").getString("text")
+                                val tripDistance = tripLeg.getJSONObject("distance").getString("text")
+                                txt_trip_time.text = "Trip Time: $tripDuration"
+                                txt_trip_distance.text = "Trip Distance: $tripDistance"
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.e("TRIP_DEBUG", "Trip route parsing error: ${e.message}")
+                    }
+                }, { error ->
+                    Log.e("TRIP_DEBUG", "Trip Directions API error: ${error.message}")
+                })
+        )
+    }
+
+
+    private fun fetchRouteAndUpdateDriverUI(origin: LatLng, destination: LatLng) {
+        val originString = "${origin.latitude},${origin.longitude}"
+        val destinationString = "${destination.latitude},${destination.longitude}"
+
+
+        iGoogleAPI.getDirections(
+            "driving",
+            "less_driving",
+            originString,
+            destinationString,
+            getString(R.string.maps_directions_api_key)
+        )
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe({ response ->
+                val jsonObject = JSONObject(response)
+                val routes = jsonObject.getJSONArray("routes")
+                if (routes.length() > 0) {
+                    val legs = routes.getJSONObject(0).getJSONArray("legs")
+                    if (legs.length() > 0) {
+                        val leg = legs.getJSONObject(0)
+                        val duration = leg.getJSONObject("duration").getString("text")
+                        val distance = leg.getJSONObject("distance").getString("text")
+
+                        txtEta.text = duration
+                        txtDistance.text = distance
+                    }
+                }
+            }, { throwable ->
+                Log.e("Route", "Error fetching route: ${throwable.message}")
+            })
+    }
+
 
 
 

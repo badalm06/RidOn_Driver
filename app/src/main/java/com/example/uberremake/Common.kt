@@ -60,6 +60,7 @@ object Common {
         }
     }
 
+
     val RIDER_KEY: String = "RiderKey"
     val PICKUP_LOCATION: String = "PickupLocation"
     val REQUEST_DRIVER_TITLE: String = "RequestDriver"
