@@ -66,6 +66,8 @@ dependencies {
     implementation("com.google.firebase:firebase-appcheck")
     implementation("com.google.firebase:firebase-appcheck-playintegrity")
     implementation ("com.google.firebase:firebase-analytics:21.2.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
 
 
     implementation ("io.reactivex.rxjava3:rxandroid:3.0.2")

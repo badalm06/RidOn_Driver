@@ -50,6 +50,8 @@ import com.example.uberremake.R
 import com.example.uberremake.Common
 import com.example.uberremake.DriverHomeActivity
 import com.example.uberremake.Model.DriverRequestReceived
+import com.example.uberremake.Model.NotificationHelper.sendTripCompletedNotification
+import com.example.uberremake.Model.TripNotificationManager
 import com.example.uberremake.Remote.IGoogleAPI
 import com.example.uberremake.Remote.RetrofitClient
 import com.example.uberremake.databinding.FragmentHomeBinding
@@ -135,6 +137,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private lateinit var root_layout: FrameLayout
     private var isRideStarted = false
     private var isRideInProgress = false
+    private var isDriverArrivedNotificationSent = false
+
 
 
 
@@ -947,6 +951,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                                                 destinationMarker = null
                                                 btnCompleteRide.visibility = View.GONE
                                                 btnStartUber.visibility = View.VISIBLE
+                                                riderInfoLayout.visibility = View.GONE
 
                                                 FirebaseDatabase.getInstance().getReference("Trips")
                                                     .child(tripId)
@@ -954,11 +959,29 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                                                     .setValue("completed")
                                                     .addOnSuccessListener {
                                                         Log.d("TripStatus", "Trip status updated to completed")
+
+                                                        // Fetch the rider's FCM token
+                                                        FirebaseDatabase.getInstance().getReference("Token")
+                                                            .child(riderId)
+                                                            .child("token")
+                                                            .get()
+                                                            .addOnSuccessListener { snapshot ->
+                                                                val riderToken = snapshot.getValue(String::class.java)
+                                                                if (riderToken != null) {
+                                                                    sendTripCompletedNotification(riderToken)
+                                                                } else {
+                                                                    Log.e("NotificationHelper", "Rider token not found")
+                                                                }
+                                                            }
+                                                            .addOnFailureListener { e ->
+                                                                Log.e("NotificationHelper", "Failed to fetch rider token: ${e.message}")
+                                                            }
                                                     }
                                                     .addOnFailureListener { e ->
                                                         Log.e("TripStatus", "Failed to update trip status: ${e.message}")
                                                     }
                                             }
+
 
 
 
@@ -1026,52 +1049,54 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     }
 
 
-
     @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     private fun startTripLocationUpdates() {
-        // You can re-use the same locationRequest or make a new one if you want different intervals
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
                 val location = locationResult.lastLocation ?: return
                 val driverCurrentLatLng = LatLng(location.latitude, location.longitude)
                 val driverLatLng = driverMarker?.position ?: return
 
-
-                // Now activeTripId is guaranteed to be set
                 updateDriverLocation(activeTripId, location.latitude, location.longitude)
 
-                val driverLocation = LatLng(location.latitude, location.longitude)
-                // Ensure riderOriginLatLng is not null
                 riderOriginLatLng?.let { pickupLatLng ->
                     val distanceToPickup = FloatArray(1)
                     Location.distanceBetween(
-                        driverLocation.latitude, driverLocation.longitude,
+                        driverCurrentLatLng.latitude, driverCurrentLatLng.longitude,
                         pickupLatLng.latitude, pickupLatLng.longitude,
                         distanceToPickup
                     )
+                    // Update UI based on distance
                     if (distanceToPickup[0] <= 50) {
-                        // Driver is within 50 meters of pickup
                         btnStartUber.visibility = View.GONE
                         btnStartRide.visibility = View.VISIBLE
-                        // Optionally, show a toast to the rider: "Driver Arrived"
                     } else {
                         btnStartUber.visibility = View.VISIBLE
                         btnStartRide.visibility = View.GONE
                     }
+                    // Let TripNotificationManager handle the notification
+                    if (::activeTripId.isInitialized) {
+                        val pickupLocation = latLngToLocation(pickupLatLng)
+                        TripNotificationManager.checkDriverArrivedAndNotify(
+                            location.latitude,
+                            location.longitude,
+                            pickupLocation,
+                            activeTripId
+                        )
+                    }
                 }
+
                 if (destinationLatLng != null) {
-                     updateTripTimeAndDistance(driverCurrentLatLng, destinationLatLng!!)
+                    updateTripTimeAndDistance(driverCurrentLatLng, destinationLatLng!!)
                 }
 
                 if (isRideStarted && !isRideInProgress && riderOriginLatLng != null) {
                     drawRoute(driverCurrentLatLng, riderOriginLatLng!!)
-                    // Optionally, update trip time and distance here
                     updateTripTimeAndDistance(driverCurrentLatLng, riderOriginLatLng!!)
                 }
 
                 if (isRideInProgress && destinationLatLng != null) {
                     drawRoute(driverLatLng, destinationLatLng!!)
-                    // Optionally, update trip time and distance here
                     updateTripTimeAndDistance(driverCurrentLatLng, destinationLatLng!!)
                 }
 
@@ -1079,11 +1104,20 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     LatLng(location.latitude, location.longitude),
                     riderOriginLatLng
                 )
-
             }
         }
         fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
     }
+
+    // Helper function to convert LatLng to Location
+    private fun latLngToLocation(latLng: LatLng): Location {
+        val location = Location("")
+        location.latitude = latLng.latitude
+        location.longitude = latLng.longitude
+        return location
+    }
+
+
 
     private fun updateTripTimeAndDistance(origin: LatLng, destination: LatLng) {
         val originString = "${origin.latitude},${origin.longitude}"
