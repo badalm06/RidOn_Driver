@@ -45,17 +45,6 @@
                  android:layout_gravity="center_horizontal"
                  android:orientation="horizontal">
 
-                 <TextView
-                     android:id="@+id/txt_uber_move"
-                     android:layout_width="wrap_content"
-                     android:layout_height="wrap_content"
-                     android:layout_gravity="center_vertical"
-                     android:layout_marginRight="8dp"
-                     android:fontFamily="@font/uber_move"
-                     android:text="Uber"
-                     android:textColor="@color/white"
-                     android:textSize="18sp"/>
-
 
                  <RelativeLayout
                      android:layout_width="wrap_content"
@@ -88,33 +77,66 @@
 
                  </RelativeLayout>
 
-
-                 <TextView
-                     android:id="@+id/txt_rating"
-                     android:layout_width="wrap_content"
-                     android:layout_height="wrap_content"
-                     android:layout_gravity="center_vertical"
-                     android:layout_marginLeft="8dp"
-                     android:fontFamily="@font/uber_move"
-                     android:drawableRight="@drawable/baseline_star_24"
-                     android:text="4.25"
-                     android:textColor="@color/white"
-                     android:textSize="18sp"/>
-
-
-
              </LinearLayout>
+
+         <LinearLayout
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             android:layout_gravity="center_horizontal"
+             android:layout_marginTop="4dp"
+             android:orientation="horizontal">
+
+             <TextView
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+                 android:layout_gravity="center_horizontal"
+                 android:layout_marginLeft="8dp"
+                 android:fontFamily="@font/uber_move"
+                 android:text="@string/Charges"
+                 android:textColor="@color/white"
+                 android:textSize="18sp"/>
+
+             <TextView
+                 android:id="@+id/txt_fare"
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+                 android:layout_gravity="center_horizontal"
+                 android:layout_marginLeft="8dp"
+                 android:fontFamily="@font/uber_move"
+                 android:textStyle="bold"
+                 android:text="₹ 10"
+                 android:textColor="@color/white"
+                 android:textSize="18sp"/>
+
+         </LinearLayout>
+
+         <LinearLayout
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             android:layout_gravity="center_horizontal"
+             android:layout_marginTop="8dp"
+             android:orientation="horizontal">
 
              <TextView
                  android:id="@+id/txt_estimate_time"
                  android:layout_width="wrap_content"
                  android:layout_height="wrap_content"
                  android:layout_gravity="center_horizontal"
-                 android:layout_marginTop="8dp"
                  android:fontFamily="@font/uber_move"
                  android:text="2 min"
                  android:textColor="@color/white"
-                 android:textSize="20sp"/>
+                 android:textSize="18sp"/>
+
+             <TextView
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+                 android:layout_gravity="center_horizontal"
+                 android:fontFamily="@font/uber_move"
+                 android:layout_marginLeft="10dp"
+                 android:text="/"
+                 android:textColor="@color/white"
+                 android:textSize="18sp"/>
+
 
 
              <TextView
@@ -123,20 +145,23 @@
                  android:layout_height="wrap_content"
                  android:layout_gravity="center_horizontal"
                  android:fontFamily="@font/uber_move"
+                 android:layout_marginLeft="10dp"
                  android:text="0.4 km"
-                 android:layout_marginTop="3dp"
                  android:textColor="@color/white"
-                 android:textSize="16sp"/>
+                 android:textSize="18sp"/>
+
+         </LinearLayout>
 
              <TextView
                  android:id="@+id/txt_trip_time"
                  android:layout_width="wrap_content"
                  android:layout_height="wrap_content"
                  android:text="Trip Time: --"
-                 android:textSize="16sp"
+                 android:textSize="18sp"
                  android:textAlignment="center"
+                 android:layout_gravity="center_horizontal"
                  android:textStyle="bold"
-                 android:layout_marginTop="3dp"
+                 android:layout_marginTop="8dp"
                  android:textColor="@color/white"
                  android:drawableLeft="@drawable/baseline_access_time_24"
                  android:drawablePadding="4dp"/>
@@ -146,13 +171,43 @@
                  android:layout_width="wrap_content"
                  android:layout_height="wrap_content"
                  android:text="Trip Distance: --"
-                 android:textSize="16sp"
+                 android:textSize="18sp"
                  android:textStyle="bold"
                  android:textColor="@color/white"
+                 android:layout_gravity="center_horizontal"
                  android:textAlignment="center"
-                 android:layout_marginTop="3dp"
+                 android:layout_marginTop="8dp"
                  android:drawableLeft="@drawable/baseline_directions_car_24"
                  android:drawablePadding="4dp"/>
+
+             <LinearLayout
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+                 android:layout_gravity="center_horizontal"
+                 android:layout_marginTop="8dp"
+                 android:orientation="horizontal">
+
+                 <TextView
+                     android:layout_width="wrap_content"
+                     android:layout_height="wrap_content"
+                     android:text="Destination:"
+                     android:textSize="18sp"
+                     android:textStyle="bold"
+                     android:textColor="@color/white"
+                     android:textAlignment="center"/>
+
+                 <TextView
+                     android:id="@+id/txt_destination"
+                     android:layout_width="wrap_content"
+                     android:layout_height="wrap_content"
+                     android:text="xyz"
+                     android:textSize="15sp"
+                     android:layout_marginLeft="3dp"
+                     android:textColor="@color/white" />
+
+
+             </LinearLayout>
+
 
 
          </LinearLayout>
@@ -205,6 +260,19 @@
                     android:layout_marginStart="16dp"
                     android:drawableLeft="@drawable/baseline_directions_car_24"
                     android:drawablePadding="4dp"/>
+
+                <TextView
+                    android:id="@+id/txt_fare1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="10"
+                    android:textStyle="bold"
+                    android:textColor="#2196F3"
+                    android:textSize="16sp"
+                    android:layout_marginStart="16dp"
+                    android:drawableLeft="@drawable/baseline_currency_rupee_24"
+                    android:drawablePadding="4dp"/>
+
             </LinearLayout>
 
             <View
@@ -306,6 +374,7 @@
             </FrameLayout>
         </LinearLayout>
     </androidx.cardview.widget.CardView>
+
 
 
 </FrameLayout>

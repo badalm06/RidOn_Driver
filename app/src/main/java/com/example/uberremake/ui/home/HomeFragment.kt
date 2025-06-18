@@ -125,6 +125,9 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private lateinit var layout_accept: CardView
     private lateinit var circularProgressBar: ProgressBar
     private var timerDisposable: Disposable? = null
+    private lateinit var txt_fare: TextView
+    private lateinit var txt_fare1: TextView
+    private lateinit var txt_destination: TextView
     private lateinit var txt_estimate_time: TextView
     private lateinit var txt_estimate_distance: TextView
     private lateinit var txt_trip_time: TextView
@@ -137,16 +140,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private lateinit var root_layout: FrameLayout
     private var isRideStarted = false
     private var isRideInProgress = false
-    private var isDriverArrivedNotificationSent = false
-
-
-
-
-    private var lastRouteUpdateTime = 0L
-    private var lastRouteLocation: LatLng? = null
-
-
-
 
     // Rider Info Layout
     private lateinit var riderInfoLayout: CardView
@@ -161,14 +154,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private lateinit var btnCompleteRide: Button
     private lateinit var activeTripId: String
 
-
-
-
     // Accept or Decline
     private var isRequestHandled = false
-
-
-
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
@@ -289,6 +276,9 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         txt_estimate_time = root.findViewById(R.id.txt_estimate_time) as TextView
         txt_estimate_distance = root.findViewById(R.id.txt_estimate_distance) as TextView
         txt_trip_time = root.findViewById(R.id.txt_trip_time) as TextView
+        txt_fare = root.findViewById(R.id.txt_fare) as TextView
+        txt_fare1 = root.findViewById(R.id.txt_fare1) as TextView
+        txt_destination = root.findViewById(R.id.txt_destination) as TextView
         txt_trip_distance = root.findViewById(R.id.txt_trip_distance) as TextView
         root_layout = root.findViewById(R.id.root_layout) as FrameLayout
 
@@ -584,8 +574,10 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                                 val duration = legsObject.getJSONObject("duration").getString("text")
                                 val distance = legsObject.getJSONObject("distance").getString("text")
 
+
                                 txt_estimate_time.text = duration
                                 txt_estimate_distance.text = distance
+
 
 
                                 // Add marker at driver's current location (origin)
@@ -633,8 +625,26 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                                                     val tripLeg = tripLegs.getJSONObject(0)
                                                     val tripDuration = tripLeg.getJSONObject("duration").getString("text")
                                                     val tripDistance = tripLeg.getJSONObject("distance").getString("text")
+                                                    val distanceValue = if (tripDistance.contains("km"))
+                                                        tripDistance.replace(" km", "").toDouble()
+                                                    else if (tripDistance.contains("m"))
+                                                        tripDistance.replace(" m", "").toDouble() / 1000
+                                                    else
+                                                        0.0
+
+                                                    val price = distanceValue * 10
+
+                                                    val start_address = tripLeg.getString("start_address")
+                                                    val end_address = tripLeg.getString("end_address")
+
+
+                                                    txt_destination.text = end_address
+
                                                     txt_trip_time.text = "Trip Time: $tripDuration"
                                                     txt_trip_distance.text = "Trip Distance: $tripDistance"
+                                                    txt_fare.text = "₹${"%.2f".format(price)}"
+                                                    txt_fare1.text = "${"%.2f".format(price)}"
+
                                                 }
                                             }
                                         } catch (e: Exception) {
@@ -815,6 +825,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
                                             txtRiderName.text = riderName
 
+
                                             if (!riderPhotoUrl.isNullOrEmpty()) {
                                                 Glide.with(requireContext())
                                                     .load(riderPhotoUrl)
@@ -952,6 +963,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                                                 btnCompleteRide.visibility = View.GONE
                                                 btnStartUber.visibility = View.VISIBLE
                                                 riderInfoLayout.visibility = View.GONE
+                                                Toast.makeText(context, "You have completed your Trip", Toast.LENGTH_LONG).show()
 
                                                 FirebaseDatabase.getInstance().getReference("Trips")
                                                     .child(tripId)
