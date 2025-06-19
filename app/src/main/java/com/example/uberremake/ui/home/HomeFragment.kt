@@ -37,6 +37,7 @@ import android.widget.ProgressBar
 import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 import androidx.cardview.widget.CardView
@@ -221,6 +222,30 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             .show()
     }
 
+    private val requestNotificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            // Permission granted, you can show notifications
+        } else {
+            Toast.makeText(context, "Permission for sending Notification is Required", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun askNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Android 13+
+            if (ContextCompat.checkSelfPermission(
+                    requireContext(),
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                // Show permission dialog
+                requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+
+
     override fun onStart() {
         super.onStart()
         Log.d("EVENTBUS", "Fragment onStart called")
@@ -299,6 +324,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
     @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     private fun init() {
+        askNotificationPermissionIfNeeded()
 
         iGoogleAPI = RetrofitClient.instance!!.create(IGoogleAPI::class.java)
 

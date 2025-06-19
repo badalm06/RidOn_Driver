@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="@drawable/dialog_bg"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:id="@+id/tvDialogTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Trip Details"
+        android:textStyle="bold"
+        android:textColor="#222"
+        android:textSize="20sp"
+        android:layout_marginBottom="12dp"/>
+
+    <TextView
+        android:id="@+id/tvDialogRider"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Rider: "
+        android:textColor="#444"
+        android:textSize="16sp"
+        android:layout_marginBottom="4dp"/>
+
+    <TextView
+        android:id="@+id/tvDialogDate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Date and Time: "
+        android:textColor="#444"
+        android:textSize="16sp"
+        android:layout_marginBottom="4dp"/>
+
+    <TextView
+        android:id="@+id/tvDialogStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Status: "
+        android:textColor="#1B5E20"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:layout_marginBottom="4dp"/>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#E0E0E0"
+        android:layout_marginTop="6dp"
+        android:layout_marginBottom="6dp"/>
+
+    <TextView
+        android:id="@+id/tvDialogCharges"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Charges: "
+        android:textColor="#D32F2F"
+        android:textStyle="bold"
+        android:textSize="17sp"
+        android:layout_marginBottom="4dp"/>
+
+    <TextView
+        android:id="@+id/tvDialogDistance"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Trip Distance: "
+        android:textColor="#444"
+        android:textSize="16sp"
+        android:layout_marginBottom="4dp"/>
+
+    <TextView
+        android:id="@+id/tvDialogDuration"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Trip Duration: "
+        android:textColor="#444"
+        android:textSize="16sp"
+        android:layout_marginBottom="4dp"/>
+
+    <TextView
+        android:id="@+id/tvDialogStart"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Start Address: "
+        android:textColor="#444"
+        android:textSize="16sp"
+        android:layout_marginBottom="4dp"/>
+
+    <TextView
+        android:id="@+id/tvDialogEnd"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="End Address: "
+        android:textColor="#444"
+        android:textSize="16sp"
+        android:layout_marginBottom="4dp"/>
+
+</LinearLayout>

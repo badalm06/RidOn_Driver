@@ -17,4 +17,5 @@
     <string name="maps_directions_api_key" translatable="false">AIzaSyAlOAmMTTK2Gg8veYFcDhj7H-EyXJjQhfo</string>
     <string name="decline">Decline\n</string>
     <string name="Charges">Fare =</string>
+    <string name="menu_history">History</string>
 </resources>

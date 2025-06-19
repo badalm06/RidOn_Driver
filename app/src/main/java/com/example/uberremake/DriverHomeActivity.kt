@@ -84,6 +84,9 @@ class DriverHomeActivity : AppCompatActivity() {
             if(it.itemId == R.id.nav_edit_profile) {
                 startActivity(Intent(this, EditProfileActivity::class.java))
             }
+            if(it.itemId == R.id.nav_history) {
+                startActivity(Intent(this, HistoryActivity::class.java))
+        }
             true
         }
 

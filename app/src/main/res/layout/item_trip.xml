@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp"
+    app:strokeColor="#E0E0E0"
+    app:strokeWidth="1dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/tvRiderName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Rider: John Doe"
+            android:textStyle="bold"
+            android:textColor="#222"
+            android:textSize="16sp"/>
+
+        <TextView
+            android:id="@+id/tvDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Date: 2025-06-18"
+            android:textColor="#666"
+            android:textSize="14sp"
+            android:layout_marginTop="4dp"/>
+
+        <TextView
+            android:id="@+id/tvTripDistance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Distance: 7.5 km"
+            android:textColor="#666"
+            android:textSize="14sp"
+            android:layout_marginTop="2dp"/>
+
+        <TextView
+            android:id="@+id/tvCharges"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Charges: ₹150"
+            android:textColor="#1B5E20"
+            android:textStyle="bold"
+            android:textSize="15sp"
+            android:layout_marginTop="2dp"/>
+
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>
