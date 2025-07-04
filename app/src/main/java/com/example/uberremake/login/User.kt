@@ -15,7 +15,9 @@ data class User(
     var number: String ="",
     var profileImageUrl: String? = null,
     var car: String = "",
-    var carNumber: String = ""
+    var carNumber: String = "",
+    var rcUrl: String? = null
+
 ) {
 
     companion object {

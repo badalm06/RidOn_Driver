@@ -18,4 +18,100 @@
     <string name="decline">Decline\n</string>
     <string name="Charges">Fare =</string>
     <string name="menu_history">History</string>
+
+    <string-array name="bank_names">
+        <item>AB Bank PLC</item>
+        <item>Allahabad Bank</item>
+        <item>Andhra Bank</item>
+        <item>AU Small Finance Bank</item>
+        <item>Airtel Payments Bank</item>
+        <item>American Express Banking Corporation</item>
+        <item>Australia and New Zealand Banking Group</item>
+        <item>Axis Bank</item>
+        <item>Bandhan Bank</item>
+        <item>Bank of America</item>
+        <item>Bank of Bahrain and Kuwait</item>
+        <item>Bank of Baroda</item>
+        <item>Bank of Ceylon</item>
+        <item>Bank of India</item>
+        <item>Bank of Maharashtra</item>
+        <item>Bank of Nova Scotia</item>
+        <item>Barclays Bank</item>
+        <item>BNP Paribas</item>
+        <item>Canara Bank</item>
+        <item>Capital Small Finance Bank</item>
+        <item>Central Bank of India</item>
+        <item>Citibank</item>
+        <item>City Union Bank</item>
+        <item>Coastal Local Area Bank</item>
+        <item>Corporation Bank</item>
+        <item>Credit Agricole Corporate and Investment Bank</item>
+        <item>CSB Bank</item>
+        <item>CTBC Bank</item>
+        <item>DBS Bank India</item>
+        <item>DCB Bank</item>
+        <item>Dena Bank</item>
+        <item>Deutsche Bank</item>
+        <item>Dhanlaxmi Bank</item>
+        <item>Doha Bank</item>
+        <item>Emirates NBD Bank</item>
+        <item>Equitas Small Finance Bank</item>
+        <item>ESAF Small Finance Bank</item>
+        <item>Federal Bank</item>
+        <item>Fino Payments Bank</item>
+        <item>First Abu Dhabi Bank</item>
+        <item>FirstRand Bank</item>
+        <item>HDFC Bank</item>
+        <item>Hong Kong and Shanghai Banking Corporation (HSBC)</item>
+        <item>ICICI Bank</item>
+        <item>IDBI Bank</item>
+        <item>IDFC FIRST Bank</item>
+        <item>India Post Payments Bank</item>
+        <item>Indian Bank</item>
+        <item>Indian Overseas Bank</item>
+        <item>IndusInd Bank</item>
+        <item>Industrial and Commercial Bank of China</item>
+        <item>Industrial Bank of Korea</item>
+        <item>J.P. Morgan Chase Bank</item>
+        <item>Jammu &amp; Kashmir Bank</item>
+        <item>Jana Small Finance Bank</item>
+        <item>Jio Payments Bank</item>
+        <item>Karnataka Bank</item>
+        <item>Karur Vysya Bank</item>
+        <item>KEB Hana Bank</item>
+        <item>Kotak Mahindra Bank</item>
+        <item>Krishna Bhima Samruddhi Local Area Bank</item>
+        <item>Mashreqbank</item>
+        <item>Maybank Indonesia</item>
+        <item>Mizuho Bank</item>
+        <item>MUFG Bank</item>
+        <item>Nainital Bank</item>
+        <item>NatWest Markets</item>
+        <item>NSDL Payments Bank</item>
+        <item>NongHyup Bank</item>
+        <item>Oriental Bank of Commerce</item>
+        <item>Paytm Payments Bank</item>
+        <item>PNB (Punjab National Bank)</item>
+        <item>Punjab &amp; Sind Bank</item>
+        <item>Qatar National Bank</item>
+        <item>RBL Bank</item>
+        <item>Sberbank</item>
+        <item>SBM Bank (India)</item>
+        <item>Shinhan Bank</item>
+        <item>Shivalik Small Finance Bank</item>
+        <item>slice Small Finance Bank</item>
+        <item>South Indian Bank</item>
+        <item>Standard Chartered Bank</item>
+        <item>State Bank of India</item>
+        <item>Suryoday Small Finance Bank</item>
+        <item>Tamilnad Mercantile Bank</item>
+        <item>UCO Bank</item>
+        <item>Ujjivan Small Finance Bank</item>
+        <item>Union Bank of India</item>
+        <item>Unity Small Finance Bank</item>
+        <item>United Bank of India</item>
+        <item>Utkarsh Small Finance Bank</item>
+        <item>Yes Bank</item>
+    </string-array>
+
 </resources>

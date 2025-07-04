@@ -7,10 +7,12 @@ import android.net.Uri
 import android.graphics.Color
 import android.os.Bundle
 import android.provider.MediaStore
+import android.provider.OpenableColumns
 import android.text.InputType
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
@@ -19,6 +21,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import com.example.uberremake.Common
 import com.example.uberremake.DriverHomeActivity
+import com.example.uberremake.EditBankDetailsActivity
 import com.example.uberremake.R
 import com.example.uberremake.databinding.ActivityEditProfileBinding
 import com.google.firebase.FirebaseException
@@ -35,12 +38,18 @@ class EditProfileActivity : AppCompatActivity() {
     private lateinit var database: DatabaseReference
     private lateinit var storageReference: StorageReference
     private var user: FirebaseUser? = null
+    private var existingRcUrl: String? = null
+
 
     private val PICK_IMAGE_REQUEST = 1
     private lateinit var profileImageView: ImageView
 
     private var isEditing = false
     private var selectedImageUri: Uri? = null
+
+    private val PICK_RC_REQUEST = 2
+    private var selectedRcUri: Uri? = null
+    private var selectedRcFileName: String? = null
 
     // Added for car fields
     private val carList = listOf(
@@ -69,6 +78,20 @@ class EditProfileActivity : AppCompatActivity() {
         database = FirebaseDatabase.getInstance().getReference("users")
         storageReference = FirebaseStorage.getInstance().getReference("profile_images/${user!!.uid}")
         profileImageView = binding.profileImage
+
+        val btnUploadRc = findViewById<Button>(R.id.btnUploadRc)
+        val tvRcFileName = findViewById<TextView>(R.id.tvRcFileName)
+
+        btnUploadRc.setOnClickListener {
+            if (isEditing) {
+                val intent = Intent(Intent.ACTION_GET_CONTENT)
+                intent.type = "*/*"
+                intent.putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("image/jpeg", "image/png", "application/pdf"))
+                startActivityForResult(Intent.createChooser(intent, "Select RC File"), PICK_RC_REQUEST)
+            }
+        }
+
+
 
         // Spinner setup: Place this in onCreate, after binding initialization
         val spinnerAdapter = object : ArrayAdapter<String>(
@@ -122,6 +145,11 @@ class EditProfileActivity : AppCompatActivity() {
                 Toast.makeText(this, "Car selection is required", Toast.LENGTH_SHORT).show()
                 isValid = false
             }
+            if (selectedRcUri == null && (existingRcUrl == null || existingRcUrl!!.isEmpty())) {
+                Toast.makeText(this, "Please upload your RC", Toast.LENGTH_SHORT).show()
+            }
+
+
             if (carNumber.isEmpty()) {
                 binding.etCarNumber.error = "Car number is required"
                 isValid = false
@@ -168,6 +196,11 @@ class EditProfileActivity : AppCompatActivity() {
                 Toast.makeText(this, "Car selection is required", Toast.LENGTH_SHORT).show()
                 isValid = false
             }
+            if (selectedRcUri == null && (existingRcUrl == null || existingRcUrl!!.isEmpty())) {
+                Toast.makeText(this, "Please upload your RC", Toast.LENGTH_SHORT).show()
+            }
+
+
             if (carNumber.isEmpty()) {
                 binding.etCarNumber.error = "Car number is required"
                 isValid = false
@@ -197,13 +230,8 @@ class EditProfileActivity : AppCompatActivity() {
             }
         }
 
-        binding.logoutBtn.setOnClickListener {
-            firebaseAuth.signOut()
-            startActivity(Intent(this, logInActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            })
-            Toast.makeText(this, "Logout Successfully", Toast.LENGTH_SHORT).show()
-            finish()
+        binding.btnEditBankDetails.setOnClickListener {
+            startActivity(Intent(this, EditBankDetailsActivity::class.java))
         }
     }
 
@@ -250,6 +278,26 @@ class EditProfileActivity : AppCompatActivity() {
                     } else {
                         profileImageView.setImageResource(R.drawable.person_24)
                     }
+
+                    // ---- RC FILE SECTION ----
+                    val rcUrl = snapshot.child("rcUrl").getValue(String::class.java)
+                    if (!rcUrl.isNullOrEmpty()) {
+                        binding.tvRcFileName.text = "RC Uploaded"
+                        existingRcUrl = rcUrl
+                        // Optional: show a "View RC" button if you have one
+                        // binding.btnViewRc.visibility = View.VISIBLE
+                        // binding.btnViewRc.setOnClickListener {
+                        //     // Open RC file (image/pdf) using Intent
+                        //     val intent = Intent(Intent.ACTION_VIEW)
+                        //     intent.setDataAndType(Uri.parse(rcUrl), "application/pdf") // or "image/*"
+                        //     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        //     startActivity(intent)
+                        // }
+                    } else {
+                        binding.tvRcFileName.text = "No file selected"
+                        // Optional: hide the "View RC" button if you have one
+                        // binding.btnViewRc.visibility = View.GONE
+                    }
                 }
 
                 override fun onCancelled(error: DatabaseError) {
@@ -286,16 +334,15 @@ class EditProfileActivity : AppCompatActivity() {
         val car = binding.etSelectCar.selectedItem.toString()
         val carNumber = binding.etCarNumber.text.toString().trim()
 
-
         if (name.isEmpty() || phone.isEmpty()) {
             Toast.makeText(this, "Name and Phone cannot be empty", Toast.LENGTH_SHORT).show()
             return
         }
-        if (car.isEmpty()) { // Added for car fields
+        if (car.isEmpty()) {
             Toast.makeText(this, "Car selection cannot be empty", Toast.LENGTH_SHORT).show()
             return
         }
-        if (carNumber.isEmpty()) { // Added for car fields
+        if (carNumber.isEmpty()) {
             Toast.makeText(this, "Car number cannot be empty", Toast.LENGTH_SHORT).show()
             return
         }
@@ -308,11 +355,8 @@ class EditProfileActivity : AppCompatActivity() {
                         // Phone changed, verify via OTP
                         sendOtpForVerification(phone, name, email, car, carNumber, onSuccess)
                     } else {
-                        if (selectedImageUri != null) {
-                            uploadImageAndSaveProfile(name, phone, email, car, carNumber, onSuccess)
-                        } else {
-                            updateProfile(name, phone, email, null, car, carNumber, onSuccess)
-                        }
+                        // Always call the combined upload function
+                        uploadImageAndRcAndSaveProfile(name, phone, email, car, carNumber, onSuccess)
                     }
                 }
 
@@ -323,25 +367,107 @@ class EditProfileActivity : AppCompatActivity() {
         }
     }
 
-    private fun uploadImageAndSaveProfile(name: String, phone: String, email: String, car: String, carNumber: String, onSuccess: () -> Unit) {
-        if (selectedImageUri == null) {
-            updateProfile(name, phone, email, null, car, carNumber, onSuccess)
-            return
+    private fun uploadImageAndRcAndSaveProfile(
+        name: String,
+        phone: String,
+        email: String,
+        car: String,
+        carNumber: String,
+        onSuccess: () -> Unit
+    ) {
+        // Helper function to proceed after both uploads
+        fun proceed(imageUrl: String?, rcUrl: String?) {
+            updateProfile(name, phone, email, imageUrl, car, carNumber, rcUrl, onSuccess)
         }
 
-        storageReference.putFile(selectedImageUri!!)
-            .addOnSuccessListener {
-                storageReference.downloadUrl.addOnSuccessListener { uri ->
-                    val imageUrl = uri.toString()
-                    Glide.with(this).load(uri).into(profileImageView)
-                    updateProfile(name, phone, email, imageUrl, car, carNumber, onSuccess)
+        // Upload profile image if selected
+        if (selectedImageUri != null) {
+            val imageRef = FirebaseStorage.getInstance()
+                .getReference("profile_images/${user!!.uid}/${selectedImageUri!!.lastPathSegment}")
+            imageRef.putFile(selectedImageUri!!)
+                .addOnSuccessListener {
+                    imageRef.downloadUrl.addOnSuccessListener { imageUri ->
+                        // Now upload RC if selected
+                        if (selectedRcUri != null) {
+                            val rcRef = FirebaseStorage.getInstance()
+                                .getReference("rc_files/${user!!.uid}/${selectedRcFileName}")
+                            rcRef.putFile(selectedRcUri!!)
+                                .addOnSuccessListener {
+                                    rcRef.downloadUrl.addOnSuccessListener { rcUri ->
+                                        proceed(imageUri.toString(), rcUri.toString())
+                                    }
+                                }
+                                .addOnFailureListener { exception ->
+                                    Toast.makeText(this, "RC upload failed: ${exception.message}", Toast.LENGTH_LONG).show()
+                                    proceed(imageUri.toString(), null)
+                                }
+
+                        } else {
+                            proceed(imageUri.toString(), null)
+                        }
+                    }
                 }
-            }
-            .addOnFailureListener {
-                Toast.makeText(this, "Image upload failed", Toast.LENGTH_SHORT).show()
-                updateProfile(name, phone, email, null, car, carNumber, onSuccess)
-            }
+                .addOnFailureListener {
+                    Toast.makeText(this, "Image upload failed", Toast.LENGTH_SHORT).show()
+                    // Try RC upload anyway
+                    if (selectedRcUri != null) {
+                        val rcRef = FirebaseStorage.getInstance()
+                            .getReference("rc_files/${user!!.uid}/${selectedRcFileName}")
+                        rcRef.putFile(selectedRcUri!!)
+                            .addOnSuccessListener {
+                                rcRef.downloadUrl.addOnSuccessListener { rcUri ->
+                                    proceed(null, rcUri.toString())
+                                }
+                            }
+                            .addOnFailureListener {
+                                Toast.makeText(this, "RC upload failed", Toast.LENGTH_SHORT).show()
+                                proceed(null, null)
+                            }
+                    } else {
+                        proceed(null, null)
+                    }
+                }
+        } else if (selectedRcUri != null) {
+            // Only RC selected
+            val rcRef = FirebaseStorage.getInstance()
+                .getReference("rc_files/${user!!.uid}/${selectedRcFileName}")
+            rcRef.putFile(selectedRcUri!!)
+                .addOnSuccessListener {
+                    rcRef.downloadUrl.addOnSuccessListener { rcUri ->
+                        proceed(null, rcUri.toString())
+                    }
+                }
+                .addOnFailureListener {
+                    Toast.makeText(this, "RC upload failed", Toast.LENGTH_SHORT).show()
+                    proceed(null, null)
+                }
+        } else {
+            // Neither image nor RC selected
+            proceed(null, null)
+        }
     }
+
+
+//    private fun uploadImageAndSaveProfile(name: String, phone: String, email: String, car: String, carNumber: String, onSuccess: () -> Unit) {
+//        if (selectedImageUri == null) {
+//            updateProfile(name, phone, email, null, car, carNumber, onSuccess)
+//            return
+//        }
+//
+//        storageReference.putFile(selectedImageUri!!)
+//            .addOnSuccessListener {
+//                storageReference.downloadUrl.addOnSuccessListener { uri ->
+//                    val imageUrl = uri.toString()
+//                    Glide.with(this).load(uri).into(profileImageView)
+//                    updateProfile(name, phone, email, imageUrl, car, carNumber, onSuccess)
+//                }
+//            }
+//            .addOnFailureListener {
+//                Toast.makeText(this, "Image upload failed", Toast.LENGTH_SHORT).show()
+//                updateProfile(name, phone, email, null, car, carNumber, onSuccess)
+//            }
+//    }
+
 
 
     private fun sendOtpForVerification(phoneNumber: String, name: String, email: String, car: String, carNumber: String, onSuccess: () -> Unit) {
@@ -409,11 +535,7 @@ class EditProfileActivity : AppCompatActivity() {
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
                         user = firebaseAuth.currentUser
-                        if (selectedImageUri != null) {
-                            uploadImageAndSaveProfile(name, phone, email, car, carNumber, onSuccess)
-                        } else {
-                            updateProfile(name, phone, email, null, car, carNumber, onSuccess)
-                        }
+                        uploadImageAndRcAndSaveProfile(name, phone, email, car, carNumber, onSuccess)
                     } else {
                         Toast.makeText(this, "Invalid OTP", Toast.LENGTH_SHORT).show()
                     }
@@ -422,21 +544,13 @@ class EditProfileActivity : AppCompatActivity() {
             // Already logged in: check if phone is already linked
             if (currentUser.phoneNumber == "+91$phone") {
                 // Already linked, just update profile
-                if (selectedImageUri != null) {
-                    uploadImageAndSaveProfile(name, phone, email, car, carNumber, onSuccess)
-                } else {
-                    updateProfile(name, phone, email, null, car, carNumber, onSuccess)
-                }
+                uploadImageAndRcAndSaveProfile(name, phone, email, car, carNumber, onSuccess)
             } else if (currentUser.providerData.any { it.providerId == "phone" }) {
                 // User already has a phone linked, so update it
                 currentUser.updatePhoneNumber(credential)
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
-                            if (selectedImageUri != null) {
-                                uploadImageAndSaveProfile(name, phone, email, car, carNumber, onSuccess)
-                            } else {
-                                updateProfile(name, phone, email, null, car, carNumber, onSuccess)
-                            }
+                            uploadImageAndRcAndSaveProfile(name, phone, email, car, carNumber, onSuccess)
                         } else {
                             Toast.makeText(this, "Could not update phone: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
                         }
@@ -446,11 +560,7 @@ class EditProfileActivity : AppCompatActivity() {
                 currentUser.linkWithCredential(credential)
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
-                            if (selectedImageUri != null) {
-                                uploadImageAndSaveProfile(name, phone, email, car, carNumber, onSuccess)
-                            } else {
-                                updateProfile(name, phone, email, null, car, carNumber, onSuccess)
-                            }
+                            uploadImageAndRcAndSaveProfile(name, phone, email, car, carNumber, onSuccess)
                         } else {
                             Toast.makeText(this, "Invalid OTP or phone already linked", Toast.LENGTH_SHORT).show()
                         }
@@ -460,7 +570,6 @@ class EditProfileActivity : AppCompatActivity() {
     }
 
 
-
     private fun updateProfile(
         name: String,
         phone: String,
@@ -468,7 +577,9 @@ class EditProfileActivity : AppCompatActivity() {
         imageUrl: String?,
         car: String,
         carNumber: String,
-        onSuccess: () -> Unit) {
+        rcUrl: String?,
+        onSuccess: () -> Unit
+    ) {
         val userData = mutableMapOf<String, Any>(
             "name" to name,
             "phone" to phone,
@@ -476,8 +587,12 @@ class EditProfileActivity : AppCompatActivity() {
             "car" to car,
             "carNumber" to carNumber
         )
+
         if (imageUrl != null) {
             userData["profileImageUrl"] = imageUrl
+        }
+        if (rcUrl != null) {
+            userData["rcUrl"] = rcUrl
         }
 
         user?.let { currentUser ->
@@ -493,6 +608,9 @@ class EditProfileActivity : AppCompatActivity() {
                         if (imageUrl != null) {
                             this.profileImageUrl = imageUrl
                         }
+                        if (rcUrl != null) {
+                            this.rcUrl = rcUrl
+                        }
                     }
                     onSuccess() // Navigation or next step only after successful save
                 }
@@ -500,6 +618,27 @@ class EditProfileActivity : AppCompatActivity() {
                     Toast.makeText(this, "Failed to update profile", Toast.LENGTH_SHORT).show()
                 }
         }
+    }
+
+
+    private fun getFileName(uri: Uri): String {
+        var result: String? = null
+        if (uri.scheme == "content") {
+            val cursor = contentResolver.query(uri, null, null, null, null)
+            cursor?.use {
+                if (it.moveToFirst()) {
+                    result = it.getString(it.getColumnIndexOrThrow(OpenableColumns.DISPLAY_NAME))
+                }
+            }
+        }
+        if (result == null) {
+            result = uri.path
+            val cut = result?.lastIndexOf('/')
+            if (cut != -1 && cut != null) {
+                result = result?.substring(cut + 1)
+            }
+        }
+        return result ?: "unknown"
     }
 
 
@@ -513,6 +652,12 @@ class EditProfileActivity : AppCompatActivity() {
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == Activity.RESULT_OK && data != null) {
             selectedImageUri = data.data
             profileImageView.setImageURI(selectedImageUri)
+        }
+
+        if (requestCode == PICK_RC_REQUEST && resultCode == Activity.RESULT_OK && data != null && data.data != null) {
+            selectedRcUri = data.data
+            selectedRcFileName = getFileName(selectedRcUri!!)
+            findViewById<TextView>(R.id.tvRcFileName).text = selectedRcFileName
         }
     }
 }
