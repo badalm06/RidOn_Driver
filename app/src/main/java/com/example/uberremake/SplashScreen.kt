@@ -11,6 +11,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.example.uberremake.IntroScreens.FirstIntro
 import com.example.uberremake.login.User
 import com.example.uberremake.login.logInActivity
 import com.google.firebase.auth.FirebaseAuth
@@ -54,18 +55,6 @@ class SplashScreen : AppCompatActivity() {
                             this.email = email
                             this.profileImageUrl = profileImageUrl
                         }
-
-//                        FirebaseMessaging.getInstance().token
-//                            .addOnCompleteListener { task ->
-//                                if (!task.isSuccessful) {
-//                                    Toast.makeText(this@SplashScreen, "Token fetch failed", Toast.LENGTH_LONG).show()
-//                                    return@addOnCompleteListener
-//                                }
-//
-//                                val token = task.result
-//                                Log.d("TOKEN", token)
-//                                User.updateToken(this@SplashScreen, token)
-//
                                 // ✅ Go to home screen
                         startActivity(Intent(this@SplashScreen, DriverHomeActivity::class.java))
                         finish()
@@ -79,26 +68,10 @@ class SplashScreen : AppCompatActivity() {
                 })
         } else {
             Handler(Looper.getMainLooper()).postDelayed({
-                startActivity(Intent(this, logInActivity::class.java))
+                startActivity(Intent(this, FirstIntro::class.java))
                 finish()
             }, 2000)
         }
     }
 
-
-//    override fun onCreate(savedInstanceState: Bundle?) {
-//        super.onCreate(savedInstanceState)
-//        enableEdgeToEdge()
-//        setContentView(R.layout.activity_splash_screen)
-//        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-//            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-//            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-//            insets
-//        }
-//        Handler(Looper.getMainLooper()).postDelayed({
-//            startActivity(Intent(this, logInActivity::class.java))
-//            finish()
-//        }, 2000)
-//
-//    }
 }

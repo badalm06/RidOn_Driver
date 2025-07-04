@@ -109,13 +109,14 @@ class OTPActivity : AppCompatActivity() {
         inputOTP4.setText("")
         inputOTP5.setText("")
         inputOTP6.setText("")
+        inputOTP1.requestFocus()
         resendTV.visibility = View.INVISIBLE
         resendTV.isEnabled = false
 
         Handler(Looper.myLooper()!!).postDelayed(Runnable {
             resendTV.visibility = View.VISIBLE
             resendTV.isEnabled = true
-        }, 60000)
+        }, 0)
     }
 
     private fun resendVerificationCode() {

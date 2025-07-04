@@ -5,28 +5,42 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/black"
+    android:background="@color/white"
     tools:context=".SplashScreen">
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="64dp"
+        android:fontFamily="@font/abyssinica_sil"
+        android:text="Driver's Login"
+        android:textColor="@color/black"
+        android:textSize="46sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <EditText
         android:id="@+id/userName"
         android:layout_width="0dp"
         android:layout_height="56dp"
         android:layout_marginLeft="20.5dp"
+        android:layout_marginTop="60dp"
         android:layout_marginRight="20.5dp"
         android:background="@drawable/edittextshape"
+        android:backgroundTint="@color/gray"
         android:elevation="6dp"
         android:ems="10"
-        android:hint="email"
-        android:layout_marginTop="250dp"
+        android:hint="Email"
         android:inputType="text"
         android:paddingStart="18dp"
         android:shadowColor="@color/black"
         android:shadowDy="5"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.338"
+        app:layout_constraintHorizontal_bias="0.487"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/textView3" />
 
     <EditText
         android:id="@+id/password"
@@ -34,6 +48,7 @@
         android:layout_height="56dp"
         android:layout_marginTop="32dp"
         android:background="@drawable/edittextshape"
+        android:backgroundTint="@color/gray"
         android:elevation="6dp"
         android:ems="10"
         android:hint="Password"
@@ -48,61 +63,64 @@
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/loginBtn"
-        android:layout_width="200dp"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
+        android:layout_marginLeft="32dp"
+        android:layout_marginTop="52dp"
+        android:layout_marginRight="32dp"
         android:layout_weight="1"
-        android:textSize="28sp"
-        android:paddingStart="10dp"
-        android:paddingEnd="10dp"
-        android:textColor="@color/white"
-        android:backgroundTint="@color/red"
-        android:background="@drawable/edittextshape"
-        android:text="Sign in"
+        android:background="@drawable/buttonshape"
+        android:backgroundTint="@color/LightBlue"
+        android:text="Login"
         android:textAllCaps="false"
+        android:textColor="@color/black"
+        android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="@+id/password"
-        app:layout_constraintHorizontal_bias="0.45"
+        app:layout_constraintHorizontal_bias="0.282"
         app:layout_constraintStart_toStartOf="@+id/password"
         app:layout_constraintTop_toBottomOf="@+id/password" />
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="80dp"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_margin="16dp"
         android:orientation="horizontal"
-        android:padding="16dp"
         android:weightSum="2"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/password"
-        tools:layout_editor_absoluteX="16dp">
+        app:layout_constraintVertical_bias="0.95"
+        tools:layout_editor_absoluteX="21dp">
 
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/login_phn_btn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="28dp"
-            android:background="@color/white"
-            android:layout_marginRight="20dp"
-            android:paddingStart="10dp"
-            android:drawableLeft="@drawable/phone_24"
-            android:layout_weight="1"
-            android:text="Sign in with Phone"
-            android:textAllCaps="false" />
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/signupBtn"
-            android:layout_width="wrap_content"
+            android:layout_width="291dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="28dp"
-            android:background="@color/white"
+            android:layout_gravity="center_vertical"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
             android:layout_weight="1"
-            android:paddingStart="10dp"
-            android:paddingEnd="20dp"
-            android:drawableLeft="@drawable/baseline_create_24"
+            android:background="@drawable/buttonshape"
+            android:backgroundTint="@color/gray"
             android:text="Sign Up"
-            android:textAllCaps="false" />
+            android:textAllCaps="false"
+            android:textColor="@color/black" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/login_phn_btn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_weight="1"
+            android:background="@drawable/buttonshape"
+            android:backgroundTint="@color/gray"
+            android:text="Continue with Phone"
+            android:textAllCaps="false"
+            android:textColor="@color/black" />
 
 
     </LinearLayout>

@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
-    android:background="@color/black"
+    android:background="@color/white"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".login.SignUpActivity">
@@ -12,12 +12,13 @@
         android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="140dp"
-        android:layout_marginEnd="116dp"
-        android:text="Sign UP"
-        android:textColor="@color/white"
-        android:textSize="50sp"
+        android:layout_marginTop="64dp"
+        android:text="Sign Up"
+        android:textColor="@color/black"
+        android:fontFamily="@font/abyssinica_sil"
+        android:textSize="46sp"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <EditText
@@ -28,9 +29,10 @@
         android:layout_marginTop="28dp"
         android:layout_marginRight="20.5dp"
         android:background="@drawable/edittextshape"
+        android:backgroundTint="@color/gray"
         android:elevation="6dp"
         android:ems="10"
-        android:hint="Your e-Mail"
+        android:hint="Email"
         android:inputType="text"
         android:paddingStart="18dp"
         android:shadowColor="@color/black"
@@ -46,11 +48,12 @@
         android:layout_height="56dp"
         android:layout_marginLeft="20.5dp"
         android:layout_marginTop="32dp"
+        android:backgroundTint="@color/gray"
         android:layout_marginRight="20.5dp"
         android:background="@drawable/edittextshape"
         android:elevation="6dp"
         android:ems="10"
-        android:hint="Username"
+        android:hint="Name"
         android:inputType="text"
         android:paddingStart="18dp"
         android:shadowColor="@color/black"
@@ -66,6 +69,7 @@
         android:layout_height="56dp"
         android:layout_marginTop="32dp"
         android:background="@drawable/edittextshape"
+        android:backgroundTint="@color/gray"
         android:elevation="6dp"
         android:ems="10"
         android:hint="Password"
@@ -84,9 +88,10 @@
         android:layout_height="56dp"
         android:layout_marginTop="32dp"
         android:background="@drawable/edittextshape"
+        android:backgroundTint="@color/gray"
         android:elevation="6dp"
         android:ems="10"
-        android:hint="Repeat Password"
+        android:hint="Confirm Password"
         android:inputType="textPassword"
         android:paddingStart="18dp"
         android:shadowColor="@color/black"
@@ -97,34 +102,45 @@
         app:layout_constraintTop_toBottomOf="@+id/password" />
 
 
-
-
-    <Button
-        android:id="@+id/sign_in_button"
-        android:layout_width="160dp"
-        android:layout_height="65dp"
-        android:layout_marginBottom="40dp"
-        android:backgroundTint="@color/brown"
-        android:text="Sign In"
-        android:textSize="20sp"
-        app:cornerRadius="15dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/register_button"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <Button
+    <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/register_button"
-        android:layout_width="160dp"
-        android:layout_height="65dp"
-        android:layout_marginBottom="40dp"
-        android:backgroundTint="@color/red"
-        android:text="Register"
-        android:textSize="20sp"
-        app:cornerRadius="15dp"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="36dp"
+        android:layout_marginTop="56dp"
+        android:layout_marginRight="36dp"
+        android:layout_weight="1"
+        android:background="@drawable/buttonshape"
+        android:backgroundTint="@color/LightBlue"
+        android:fontFamily="sans-serif-medium"
+        android:text="Sign Up"
+        android:textAllCaps="false"
+        android:textColor="@color/black"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toEndOf="@+id/repeat_password"
+        app:layout_constraintHorizontal_bias="0.314"
+        app:layout_constraintStart_toStartOf="@+id/repeat_password"
+        app:layout_constraintTop_toBottomOf="@+id/repeat_password" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/sign_in_button"
+        android:layout_width="291dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="88dp"
+        android:layout_marginBottom="24dp"
+        android:layout_weight="1"
+        android:background="@drawable/buttonshape"
+        android:backgroundTint="@color/gray"
+        android:fontFamily="sans-serif"
+        android:text="Already have an account? Sign In"
+        android:textAllCaps="false"
+        android:textColor="@color/black"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"/>
+        app:layout_constraintEnd_toEndOf="@+id/register_button"
+        app:layout_constraintHorizontal_bias="0.428"
+        app:layout_constraintStart_toStartOf="@+id/register_button"
+        app:layout_constraintTop_toBottomOf="@+id/register_button" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
