@@ -68,7 +68,7 @@ class DriverHomeActivity : AppCompatActivity() {
                     startActivity(Intent(this, logInActivity::class.java))
                     finish()
                 }
-                builder.setNegativeButton("Cancle") { dialog, _ ->
+                builder.setNegativeButton("Cancel") { dialog, _ ->
                     dialog.dismiss()
                 }
                 val dialog = builder.create()
@@ -87,6 +87,10 @@ class DriverHomeActivity : AppCompatActivity() {
             if(it.itemId == R.id.nav_history) {
                 startActivity(Intent(this, HistoryActivity::class.java))
         }
+
+            if(it.itemId == R.id.nav_home) {
+                startActivity(Intent(this, DriverHomeActivity::class.java))
+            }
             true
         }
 

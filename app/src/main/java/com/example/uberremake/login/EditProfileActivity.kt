@@ -198,6 +198,7 @@ class EditProfileActivity : AppCompatActivity() {
             }
             if (selectedRcUri == null && (existingRcUrl == null || existingRcUrl!!.isEmpty())) {
                 Toast.makeText(this, "Please upload your RC", Toast.LENGTH_SHORT).show()
+                isValid = false
             }
 
 
@@ -447,26 +448,6 @@ class EditProfileActivity : AppCompatActivity() {
         }
     }
 
-
-//    private fun uploadImageAndSaveProfile(name: String, phone: String, email: String, car: String, carNumber: String, onSuccess: () -> Unit) {
-//        if (selectedImageUri == null) {
-//            updateProfile(name, phone, email, null, car, carNumber, onSuccess)
-//            return
-//        }
-//
-//        storageReference.putFile(selectedImageUri!!)
-//            .addOnSuccessListener {
-//                storageReference.downloadUrl.addOnSuccessListener { uri ->
-//                    val imageUrl = uri.toString()
-//                    Glide.with(this).load(uri).into(profileImageView)
-//                    updateProfile(name, phone, email, imageUrl, car, carNumber, onSuccess)
-//                }
-//            }
-//            .addOnFailureListener {
-//                Toast.makeText(this, "Image upload failed", Toast.LENGTH_SHORT).show()
-//                updateProfile(name, phone, email, null, car, carNumber, onSuccess)
-//            }
-//    }
 
 
 

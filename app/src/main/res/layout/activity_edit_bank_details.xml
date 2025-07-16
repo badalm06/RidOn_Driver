@@ -1,77 +1,108 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-    <!-- Top App Bar -->
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbarBankDetails"
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
-        android:padding="20dp"
-        android:title="Bank Details"
-        android:titleTextColor="@color/white" />
-
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp">
+    android:id="@+id/main">
 
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
         android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/textView5"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Bank Details"
+            android:fontFamily="@font/abyssinica_sil"
+            android:textColor="@color/black"
+            android:textSize="46sp"
+            android:textStyle="bold" />
 
         <EditText
             android:id="@+id/etAccountHolder"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="60dp"
+            android:layout_marginTop="36dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:background="@drawable/edittextshape"
+            android:backgroundTint="@color/gray"
+            android:elevation="6dp"
+            android:paddingLeft="10dp"
             android:hint="Account Holder Name"
             android:inputType="textPersonName"
-            android:layout_marginBottom="12dp" />
+            android:layout_marginBottom="18dp" />
 
         <EditText
             android:id="@+id/etAccountNumber"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="60dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:background="@drawable/edittextshape"
+            android:backgroundTint="@color/gray"
+            android:elevation="6dp"
+            android:paddingLeft="10dp"
             android:hint="Account Number"
             android:inputType="number"
-            android:layout_marginBottom="12dp" />
+            android:layout_marginBottom="18dp" />
 
         <EditText
             android:id="@+id/etIfsc"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="60dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:background="@drawable/edittextshape"
+            android:backgroundTint="@color/gray"
+            android:elevation="6dp"
+            android:paddingLeft="10dp"
             android:hint="IFSC Code"
             android:inputType="text"
-            android:layout_marginBottom="12dp" />
+            android:layout_marginBottom="18dp" />
 
         <Spinner
             android:id="@+id/spinnerBankName"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"/>
+            android:layout_height="60dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:background="@drawable/edittextshape"
+            android:backgroundTint="@color/gray"
+            android:elevation="6dp"
+            android:paddingLeft="10dp"
+            android:layout_marginBottom="18dp"/>
 
 
         <EditText
             android:id="@+id/etPan"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="60dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:background="@drawable/edittextshape"
+            android:backgroundTint="@color/gray"
+            android:elevation="6dp"
+            android:paddingLeft="10dp"
             android:hint="PAN Number"
             android:inputType="text"
             android:layout_marginBottom="20dp" />
 
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnSaveBankDetails"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Save Bank Details" />
+            android:layout_marginTop="32dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:text="Save Bank Details"
+            android:background="@drawable/buttonshape"
+            android:backgroundTint="@color/LightBlue" />
 
     </LinearLayout>
 </ScrollView>
 
-</LinearLayout>
