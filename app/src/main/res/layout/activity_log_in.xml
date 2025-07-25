@@ -70,7 +70,7 @@
         android:layout_marginRight="32dp"
         android:layout_weight="1"
         android:background="@drawable/buttonshape"
-        android:backgroundTint="@color/LightBlue"
+        android:backgroundTint="@color/yellow"
         android:text="Login"
         android:textAllCaps="false"
         android:textColor="@color/black"
