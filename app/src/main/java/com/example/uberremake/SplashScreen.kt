@@ -68,7 +68,7 @@ class SplashScreen : AppCompatActivity() {
                 })
         } else {
             Handler(Looper.getMainLooper()).postDelayed({
-                startActivity(Intent(this, FirstIntro::class.java))
+                startActivity(Intent(this, logInActivity::class.java))
                 finish()
             }, 2000)
         }

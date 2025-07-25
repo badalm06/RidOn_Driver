@@ -57,7 +57,7 @@ class EditProfileActivity : AppCompatActivity() {
         "Maruti Suzuki Dzire", "Maruti Suzuki Wagon R", "Maruti Suzuki Celerio", "Maruti Suzuki Ertiga",
         "Maruti Suzuki Alto K10", "Maruti Suzuki Eeco", "Hyundai Aura", "Hyundai Grand i10 Nios", "Tata Tiago",
         "Tata Tigor", "Honda Amaze", "Toyota Innova Crysta", "Mahindra Marazzo", "Mahindra Scorpio",
-        "Kia Carens"
+        "Kia Carens", "Other"
     )
 
 

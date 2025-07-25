@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Uber Remake</string>
+    <string name="app_name">RidOn - Driver</string>
     <string name="title_activity_driver_home">DriverHomeActivity</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>

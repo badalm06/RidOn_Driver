@@ -2,6 +2,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/white"
     android:id="@+id/main">
 
 
@@ -30,6 +31,7 @@
             android:layout_marginLeft="20dp"
             android:layout_marginRight="20dp"
             android:background="@drawable/edittextshape"
+            android:textColor="@color/black"
             android:backgroundTint="@color/gray"
             android:elevation="6dp"
             android:paddingLeft="10dp"
@@ -45,6 +47,7 @@
             android:layout_marginRight="20dp"
             android:background="@drawable/edittextshape"
             android:backgroundTint="@color/gray"
+            android:textColor="@color/black"
             android:elevation="6dp"
             android:paddingLeft="10dp"
             android:hint="Account Number"
@@ -59,6 +62,7 @@
             android:layout_marginRight="20dp"
             android:background="@drawable/edittextshape"
             android:backgroundTint="@color/gray"
+            android:textColor="@color/black"
             android:elevation="6dp"
             android:paddingLeft="10dp"
             android:hint="IFSC Code"
@@ -86,6 +90,7 @@
             android:layout_marginRight="20dp"
             android:background="@drawable/edittextshape"
             android:backgroundTint="@color/gray"
+            android:textColor="@color/black"
             android:elevation="6dp"
             android:paddingLeft="10dp"
             android:hint="PAN Number"
