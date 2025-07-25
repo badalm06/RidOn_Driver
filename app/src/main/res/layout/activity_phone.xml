@@ -47,7 +47,7 @@
             android:layout_marginTop="136dp"
             android:layout_marginRight="32dp"
             android:background="@drawable/buttonshape"
-            android:backgroundTint="@color/LightBlue"
+            android:backgroundTint="@color/yellow"
             android:fontFamily="sans-serif-medium"
             android:text="Send OTP"
             android:textAllCaps="false"

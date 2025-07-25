@@ -101,7 +101,7 @@
             android:layout_marginRight="20dp"
             android:text="Save Bank Details"
             android:background="@drawable/buttonshape"
-            android:backgroundTint="@color/LightBlue" />
+            android:backgroundTint="@color/yellow" />
 
     </LinearLayout>
 </ScrollView>

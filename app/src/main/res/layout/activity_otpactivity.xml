@@ -41,7 +41,7 @@
             android:layout_marginTop="48dp"
             android:layout_marginRight="32dp"
             android:background="@drawable/buttonshape"
-            android:backgroundTint="@color/LightBlue"
+            android:backgroundTint="@color/yellow"
             android:text="Verify"
             android:textAllCaps="false"
             android:textColor="@color/black"
