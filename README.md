@@ -17,13 +17,13 @@ RidOn Rider App Github Repo Link: https://github.com/badalm06/RidOn_Rider
 
 # 📸 Screenshots
 
-<img width="200" height="700" alt="Screenshot_20250906_103711" src="https://github.com/user-attachments/assets/3167dbfa-0dad-4459-8029-c2ba78b0c5f3" />&nbsp;&nbsp;&nbsp;
-<img width="200" height="700" alt="Screenshot_20250906_110516" src="https://github.com/user-attachments/assets/02131c19-40ea-404e-bb54-7e0ce4cc9911" />&nbsp;&nbsp;&nbsp;
-<img width="200" height="700" alt="Screenshot_20250906_105637" src="https://github.com/user-attachments/assets/220d3271-10a5-4fd4-a1c4-502036fbf093" />&nbsp;&nbsp;&nbsp;
-<img width="200" height="700" alt="Screenshot_20250906_110615" src="https://github.com/user-attachments/assets/c3634cae-9780-4604-a004-d2509612c73b" />&nbsp;&nbsp;&nbsp;
-<img width="200" height="700" alt="Screenshot_20250906_110805" src="https://github.com/user-attachments/assets/ecdb943c-2757-4d0b-9348-a8413061d7e3" />&nbsp;&nbsp;&nbsp;
-<img width="200" height="700" alt="Screenshot_20250906_110832" src="https://github.com/user-attachments/assets/9d890187-4657-4663-9a00-b84139b35c8f" />&nbsp;&nbsp;&nbsp;
-<img width="200" height="700" alt="Screenshot_20250906_110951" src="https://github.com/user-attachments/assets/2a63cd26-b50a-40c2-adf5-66574f373370" />&nbsp;&nbsp;&nbsp;
+<img width="200"  alt="Screenshot_20250906_103711" src="https://github.com/user-attachments/assets/3167dbfa-0dad-4459-8029-c2ba78b0c5f3" />&nbsp;&nbsp;&nbsp;
+<img width="200"  alt="Screenshot_20250906_110516" src="https://github.com/user-attachments/assets/02131c19-40ea-404e-bb54-7e0ce4cc9911" />&nbsp;&nbsp;&nbsp;
+<img width="200"  alt="Screenshot_20250906_105637" src="https://github.com/user-attachments/assets/220d3271-10a5-4fd4-a1c4-502036fbf093" />&nbsp;&nbsp;&nbsp;
+<img width="200"  alt="Screenshot_20250906_110615" src="https://github.com/user-attachments/assets/c3634cae-9780-4604-a004-d2509612c73b" />&nbsp;&nbsp;&nbsp;
+<img width="200"  alt="Screenshot_20250906_110805" src="https://github.com/user-attachments/assets/ecdb943c-2757-4d0b-9348-a8413061d7e3" />&nbsp;&nbsp;&nbsp;
+<img width="200"  alt="Screenshot_20250906_110832" src="https://github.com/user-attachments/assets/9d890187-4657-4663-9a00-b84139b35c8f" />&nbsp;&nbsp;&nbsp;
+<img width="200"  alt="Screenshot_20250906_110951" src="https://github.com/user-attachments/assets/2a63cd26-b50a-40c2-adf5-66574f373370" />&nbsp;&nbsp;&nbsp;
 
 
 
